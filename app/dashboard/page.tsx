@@ -19,6 +19,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import useStore from '@/lib/hooks/useStore';
 import { useMatch } from '@/lib/hooks/useMatch'
+import { useDog } from '@/lib/hooks/useDog'
 import { useWindowSize } from 'react-use'
 import Confetti from 'react-confetti'
 
@@ -46,19 +47,30 @@ export default function Dashboard() {
     })
 
     const [showConfetti, setShowConfetti] = useState(false)
+    const [matchError, setMatchError] = useState<string | null>(null);
 
     const { breeds } = useBreeds()
     const { search } = useSearch(searchParams)
 
     const { likedDogs } = useStore()
     const { match, isLoading: isMatchLoading, findMatch } = useMatch(likedDogs)
+    
+    // Use the matched dog ID to fetch the full dog details
+    const { dog: matchedDog, isLoading: isDogLoading } = useDog(match || "");
+    
+    // Combined loading state
+    const isLoading = isMatchLoading || (match && isDogLoading);
 
-    // Effect to show confetti when match data arrives
+    // Effect to show confetti when matched dog data arrives
     useEffect(() => {
-        if (match && !isMatchLoading) {
+        if (matchedDog && !isLoading) {
             setShowConfetti(true);
+            setMatchError(null);
+        } else if (match && !matchedDog && !isDogLoading) {
+            // If we have a match ID but no dog data, it means there was an error fetching the dog
+            setMatchError("Couldn't load the details of your matched dog.");
         }
-    }, [match, isMatchLoading]);
+    }, [matchedDog, isLoading, match, isDogLoading]);
 
     const handleBreedSelect = (breeds: string[]) => {
         // Take the last selected breed, or empty string if none selected
@@ -96,6 +108,14 @@ export default function Dashboard() {
     }
 
     const handleFindMatch = () => {
+        setMatchError(null);
+        
+        // Don't attempt to find a match if no dogs are liked
+        if (likedDogs.length === 0) {
+            setMatchError("Please like some dogs first!");
+            return;
+        }
+        
         findMatch();
     }
 
@@ -178,7 +198,7 @@ export default function Dashboard() {
                                     width={width}
                                     height={height}
                                     recycle={false}
-                                    run={showConfetti && !!match && !isMatchLoading}
+                                    run={showConfetti && !!matchedDog && !isLoading}
                                 />
                                 <CardHeader>
                                     <CardTitle>Adopt</CardTitle>
@@ -191,12 +211,18 @@ export default function Dashboard() {
                                     <br />
                                     What will your match be?
 
-                                    {match && (
+                                    {matchError && (
+                                        <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-md font-publicSans text-sm">
+                                            {matchError}
+                                        </div>
+                                    )}
+
+                                    {matchedDog && (
                                         <div className="mt-4 p-4 border rounded font-publicSans">
-                                            <h3 className="font-bold text-lg mb-2">Your Match: {match.name}</h3>
-                                            <p>Breed: {match.breed}</p>
-                                            <p>Age: {match.age} years</p>
-                                            <p>Location: {match.zip_code}</p>
+                                            <h3 className="font-bold text-lg mb-2">Your Match: {matchedDog.name}</h3>
+                                            <p>Breed: {matchedDog.breed}</p>
+                                            <p>Age: {matchedDog.age} years</p>
+                                            <p>Location: {matchedDog.zip_code}</p>
                                         </div>
                                     )}
                                 </CardContent>
@@ -204,9 +230,9 @@ export default function Dashboard() {
                                     <Button
                                         className="w-full bg-bw text-text font-publicSans"
                                         onClick={handleFindMatch}
-                                        disabled={isMatchLoading || likedDogs.length === 0}
+                                        disabled={isLoading || likedDogs.length === 0}
                                     >
-                                        {isMatchLoading ? 'Finding your match...' : 'Find your perfect match'}
+                                        {isLoading ? 'Finding your match...' : 'Find your perfect match'}
                                     </Button>
                                 </CardFooter>
                             </Card>

@@ -8,6 +8,7 @@ const postFetcher = (url: string, dogIds: string[]) =>
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      credentials: 'include'
     },
     body: JSON.stringify(dogIds)
   }).then(res => res.json());

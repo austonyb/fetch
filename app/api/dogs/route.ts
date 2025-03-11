@@ -15,13 +15,18 @@ export async function POST(request: NextRequest) {
 
     const breedsUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/dogs`;
     
-    const response = await fetch(breedsUrl, {
+    // Using type assertion to handle the duplex option that TypeScript doesn't know about yet
+    const fetchOptions = {
       headers: {
-        'Cookie': `fetch-access-token=${cookie.value}`
+        'Cookie': `fetch-access-token=${cookie.value}`,
+        'Content-Type': 'application/json'
       },
       method: 'POST',
-      body: request.body
-    });
+      body: request.body,
+      duplex: 'half' // Required for requests with a body in newer fetch implementations
+    } as RequestInit;
+    
+    const response = await fetch(breedsUrl, fetchOptions);
 
     const data = await response.json();
 
