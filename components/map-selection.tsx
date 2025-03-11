@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { MapContainer, TileLayer, Rectangle, useMap, useMapEvents } from 'react-leaflet'
-import L from 'leaflet'
+import L, { LatLngBounds } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { Coordinates } from '@/lib/types'
 
 // Fix Leaflet icon issues in Next.js
 const fixLeafletIcon = () => {
-  // @ts-ignore - Leaflet's icon system doesn't play well with webpack
+  // @ts-expect-error - Leaflet's icon system doesn't play well with webpack
   delete L.Icon.Default.prototype._getIconUrl
   L.Icon.Default.mergeOptions({
     iconRetinaUrl: '/leaflet/marker-icon-2x.png',
@@ -18,8 +18,8 @@ const fixLeafletIcon = () => {
 }
 
 interface BoundingBox {
-  top_left: Coordinates;
-  bottom_right: Coordinates;
+  top_left: { lat: number; lon: number };
+  bottom_right: { lat: number; lon: number };
 }
 
 interface MapSelectionProps {
@@ -50,7 +50,7 @@ const mapStyles = {
 // This component updates the search bounds when the map viewport changes
 function ViewportBoundsHandler({ onBoundsChange }: { onBoundsChange: (bounds: BoundingBox | null) => void }) {
   const map = useMap();
-  const [bounds, setBounds] = useState<L.LatLngBounds | null>(null);
+  const [bounds, setBounds] = useState<LatLngBounds | null>(null);
   const initialBoundsSetRef = useRef(false);
   const lastBoundsRef = useRef<BoundingBox | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -128,41 +128,49 @@ function ViewportBoundsHandler({ onBoundsChange }: { onBoundsChange: (bounds: Bo
   ) : null;
 }
 
+// This component will help initialize Leaflet when the map is ready
+function InitializeLeaflet() {
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      fixLeafletIcon();
+    }
+  }, []);
+  
+  return null;
+}
+
 export default function MapSelection({
   onBoundsChange,
   height = "300px",
   width = "100%",
   className = "",
   mapStyle = "light",
-  initialCenter = [39.8283, -98.5795], // Center of USA
+  initialCenter = [39.8283, -98.5795],
   initialZoom = 4
 }: MapSelectionProps) {
   const [isMounted, setIsMounted] = useState(false);
   
-  // Fix Leaflet icons once on client-side
+  // Mount check for client-side rendering
   useEffect(() => {
     setIsMounted(true);
-    fixLeafletIcon();
   }, []);
   
   // Instructions for the user
   const instructions = (
     <div className="absolute bottom-2 left-2 right-2 z-[1000] bg-white bg-opacity-80 p-2 rounded-md text-xs font-publicSans text-gray-800">
-      <p>Navigate the map to focus on your desired area. The current view will be used to filter dogs by location.</p>
+      <strong>Tip:</strong> The current map view determines which dogs are shown. Pan and zoom to find dogs in different areas.
     </div>
   );
-  
+
+  // Show nothing during SSR to prevent hydration errors
   if (!isMounted) {
-    return <div style={{ height, width }} className={`${className} bg-gray-100 flex items-center justify-center`}>
-      <div className="text-gray-400 font-publicSans">Loading map...</div>
-    </div>;
+    return <div style={{ height, width }} className={`${className} bg-gray-100`}></div>;
   }
   
   return (
     <div style={{ height, width }} className={`${className} relative`}>
       {instructions}
       
-      {/* @ts-ignore - Type definitions issue with react-leaflet */}
       <MapContainer
         center={initialCenter}
         zoom={initialZoom}
@@ -171,6 +179,7 @@ export default function MapSelection({
         zoomControl={true}
         className="z-0" // Ensure map has a low z-index
       >
+        <InitializeLeaflet />
         <TileLayer
           attribution={mapStyles[mapStyle].attribution}
           url={mapStyles[mapStyle].url}

@@ -1,8 +1,7 @@
 import useSWR from 'swr';
-import { useState, useEffect } from 'react';
-import { useLocations, useLocationSearch } from './useLocations';
+import { useLocationSearch } from './useLocations';
 
-import { SearchParams, SearchResult, Dog, Coordinates, Location } from '@/types';
+import { SearchParams, Dog, Coordinates, Location } from '@/types';
 
 function buildSearchUrl(params?: SearchParams): string {
   if (!params) return '/api/dogs/search';

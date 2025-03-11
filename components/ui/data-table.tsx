@@ -3,10 +3,14 @@
 import * as React from "react"
 import Image from "next/image"
 import { Heart, ChevronUp, ChevronDown, MapPin } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog'
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  useReactTable,
+} from "@tanstack/react-table"
+
 import {
   Table,
   TableBody,
@@ -15,6 +19,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Label } from '@/components/ui/label'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog'
 import { Skeleton } from "@/components/ui/skeleton"
 import Map from "@/components/map"
 import useStore from "@/lib/hooks/useStore"
@@ -186,7 +193,7 @@ export function DataTable({
                     </TableCell>
                   </TableRow>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[700px]">
+                <DialogContent className="sm:max-w-[700px]" style={{ zIndex: 999 }}>
                   <DialogHeader>
                     <DialogTitle className="text-2xl font-publicSans">{dog.name}</DialogTitle>
                     <DialogDescription className="text-md font-publicSans">

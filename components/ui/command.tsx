@@ -11,6 +11,8 @@ import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 import { cn } from "@/lib/utils"
 
+interface CommandProps extends DialogProps {}
+
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive>

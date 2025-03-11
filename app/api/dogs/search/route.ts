@@ -162,6 +162,7 @@ export async function POST(request: NextRequest) {
       const locationsResult = await locationsResponse.json();
       
       // Extract zip codes from the locations response
+      //eslint-disable-next-line
       const zipCodes = locationsResult.results.map((location: any) => location.zip_code);
       
       // If we found zip codes, add them to the search URL

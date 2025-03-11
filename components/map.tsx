@@ -1,13 +1,13 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
-import L from 'leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import L, { LatLngExpression, LatLngTuple } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 // Fix Leaflet icon issues in Next.js
 const fixLeafletIcon = () => {
-  // @ts-ignore - Leaflet's icon system doesn't play well with webpack
+  // @ts-expect-error - Leaflet's icon system doesn't play well with webpack
   delete L.Icon.Default.prototype._getIconUrl
   L.Icon.Default.mergeOptions({
     iconRetinaUrl: '/leaflet/marker-icon-2x.png',
@@ -26,55 +26,29 @@ const purpleIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-// Map style options
+// Map style definitions
 const mapStyles = {
   light: {
-    url: "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png",
-    attribution: '&copy; <a href="https://stamen.com">Stamen Design</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
   },
   dark: {
-    url: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png",
-    attribution: '&copy; <a href="https://stamen.com">Stamen Design</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
   },
   pastel: {
-    url: "https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.png",
-    attribution: '&copy; <a href="https://stamen.com">Stamen Design</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
   }
 };
 
-interface MapProps {
-  zipCode: string
-  dogName?: string
-  height?: string
-  width?: string
-  className?: string
-  mapStyle?: 'light' | 'dark' | 'pastel'
-}
-
-// Response type from the geocoding API
-interface GeocodingResult {
-  place_id: number;
-  licence: string;
-  boundingbox: string[];
-  lat: string;
-  lon: string;
-  display_name: string;
-  class: string;
-  type: string;
-  importance: number;
-}
-
-// This function calls our geocoding API to convert a zip code to coordinates
-async function getCoordinatesFromZipCode(zipCode: string): Promise<[number, number] | null> {
+// Helper function to get coordinates from zip code
+async function getCoordinatesFromZipCode(zipCode: string): Promise<LatLngTuple | null> {
   try {
-    const response = await fetch(`/api/locations/geocode?address=${zipCode}`);
+    const response = await fetch(`/api/locations/geocode?address=${zipCode}`)
+    if (!response.ok) throw new Error('Failed to fetch location data')
     
-    if (!response.ok) {
-      console.error(`Error fetching coordinates: ${response.status}`);
-      return null;
-    }
-    
-    const data = await response.json() as GeocodingResult[];
+    const data = await response.json()
     
     // Check if we got valid results back
     if (data && data.length > 0) {
@@ -87,105 +61,91 @@ async function getCoordinatesFromZipCode(zipCode: string): Promise<[number, numb
         return null;
       }
       
-      return [lat, lon];
+      return [lat, lon] as LatLngTuple;
     }
     
-    // No results found
-    console.error("No geocoding results for zip code:", zipCode);
-    return null;
+    return null
   } catch (error) {
-    console.error("Error fetching coordinates:", error);
-    return null;
+    console.error('Error fetching coordinates:', error)
+    return null
   }
+}
+
+interface MapProps {
+  zipCode: string;
+  dogName?: string;
+  height?: string;
+  width?: string;
+  className?: string;
+  mapStyle?: 'light' | 'dark' | 'pastel';
+}
+
+// This component will help initialize Leaflet when the map is ready
+function InitializeLeaflet() {
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      fixLeafletIcon();
+    }
+  }, []);
+  
+  return null;
 }
 
 export default function Map({ 
   zipCode, 
   dogName = "Dog Location",
-  height = "100%", 
+  height = "100%",
   width = "100%",
   className = "",
-  mapStyle = "pastel" // default to pastel style
+  mapStyle = "light"
 }: MapProps) {
-  // State to track if we're on the client side
+  const [coordinates, setCoordinates] = useState<LatLngTuple>([39.8283, -98.5795])
+  const [locationName, setLocationName] = useState('')
   const [isMounted, setIsMounted] = useState(false)
-  const [coordinates, setCoordinates] = useState<[number, number] | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
   
   useEffect(() => {
     setIsMounted(true)
-    fixLeafletIcon()
     
     // Fetch coordinates from zip code
     const fetchCoordinates = async () => {
       try {
-        setLoading(true)
-        setError(false)
+        if (!zipCode) return
+        
         const coords = await getCoordinatesFromZipCode(zipCode)
-        setCoordinates(coords)
-        if (!coords) {
-          setError(true)
+        if (coords) {
+          setCoordinates(coords)
+          setLocationName(zipCode) // We only have the zipcode to display
         }
       } catch (error) {
-        console.error("Error in coordinate fetching:", error)
-        setError(true)
-        setCoordinates(null)
-      } finally {
-        setLoading(false)
+        console.error('Error fetching coordinates:', error)
       }
     }
     
     fetchCoordinates()
   }, [zipCode])
   
-  if (!isMounted || loading) {
-    // Return a placeholder or loading state
-    return (
-      <div 
-        style={{ height, width }} 
-        className={`bg-gray-100 flex items-center justify-center font-publicSans ${className}`}
-      >
-        Loading map...
-      </div>
-    )
-  }
-  
-  // Don't render the map if geocoding failed
-  if (error || !coordinates) {
-    return (
-      <div 
-        style={{ height, width }} 
-        className={`bg-gray-100 flex items-center justify-center font-publicSans text-gray-500 ${className}`}
-      >
-        <div className="text-center p-4">
-          <p>Location map unavailable</p>
-          <p className="text-sm mt-1">Zip code: {zipCode}</p>
-        </div>
-      </div>
-    )
+  if (!isMounted) {
+    return <div style={{ height, width }} className={`${className} bg-gray-100`}></div>;
   }
   
   return (
     <div style={{ height, width }} className={className}>
-      {/* @ts-ignore - Type definitions issue with react-leaflet 5.0.0-rc.2 */}
       <MapContainer 
         center={coordinates} 
         zoom={11} 
-        scrollWheelZoom={false}
         style={{ height: '100%', width: '100%' }}
         attributionControl={false}
       >
+        <InitializeLeaflet />
         <TileLayer
           attribution={mapStyles[mapStyle].attribution}
           url={mapStyles[mapStyle].url}
         />
         <Marker position={coordinates} icon={purpleIcon}>
           <Popup>
-            <div className="font-publicSans text-sm">
-              <span className="font-bold">{dogName}</span>
-              <br />
-              Zip Code: {zipCode}
+            <div className="text-center p-1">
+              <div className="font-semibold mb-1">{dogName}</div>
+              {locationName && <div className="text-sm text-gray-600">{locationName}</div>}
             </div>
           </Popup>
         </Marker>

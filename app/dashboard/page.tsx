@@ -25,6 +25,7 @@ import Confetti from 'react-confetti';
 import Map from '@/components/map';
 import MapSelection from '@/components/map-selection';
 import { Coordinates } from '@/lib/types';
+import Image from "next/image"
 
 export default function Dashboard() {
     const { width, height } = useWindowSize()
@@ -34,7 +35,7 @@ export default function Dashboard() {
         breeds: string[] | undefined,
         size: number,
         page: number,
-        sort: any,
+        sort?: `${'breeds' | 'zipCodes' | 'ageMin' | 'ageMax' | 'size' | 'age' | 'name' | 'breed'}:${'asc' | 'desc'}`,
         geoBoundingBox: {
             top_left: Coordinates,
             bottom_right: Coordinates
@@ -54,15 +55,15 @@ export default function Dashboard() {
         direction: 'asc'
     })
 
-    const [showConfetti, setShowConfetti] = useState(false)
-    const [matchError, setMatchError] = useState<string | null>(null);
-    const [imageLoading, setImageLoading] = useState(true);
     const [imageError, setImageError] = useState(false);
     const [showLocationMap, setShowLocationMap] = useState(false);
     const [locationFilter, setLocationFilter] = useState<{
         top_left: Coordinates,
         bottom_right: Coordinates
     } | null>(null);
+
+    const [showConfetti, setShowConfetti] = useState(false)
+    const [matchError, setMatchError] = useState<string | null>(null);
 
     const { breeds } = useBreeds()
     const { search } = useSearch(searchParams)
@@ -128,7 +129,12 @@ export default function Dashboard() {
     const handleSort = (field: string, direction: 'asc' | 'desc') => {
         setSortState({ field, direction });
 
-        const sortString = `${field}:${direction}` as const;
+        // Ensure field is valid for sort parameter
+        const validFields = ['breeds', 'zipCodes', 'ageMin', 'ageMax', 'size', 'age', 'name', 'breed'] as const;
+        const validField = validFields.includes(field as any) ? field as typeof validFields[number] : 'name';
+        
+        // Create properly typed sort string
+        const sortString = `${validField}:${direction}` as const;
 
         setSearchParams(prev => ({
             ...prev,
@@ -174,7 +180,7 @@ export default function Dashboard() {
                                     <div className="mx-auto mb-4">
                                         <div className="mb-6">
                                             <div className="flex flex-wrap items-center gap-3 mb-3 relative">
-                                                <div className="w-[220px] relative" style={{ zIndex: 9999 }}>
+                                                <div className="w-[220px] relative" style={{ zIndex: 99 }}>
                                                     <Combobox
                                                         breeds={breeds}
                                                         onSelect={handleBreedSelect}
@@ -269,12 +275,6 @@ export default function Dashboard() {
                         </TabsContent>
                         <TabsContent value="adopt">
                             <Card>
-                                <Confetti
-                                    width={width}
-                                    height={height}
-                                    recycle={false}
-                                    run={showConfetti && !!matchedDog && !isLoading}
-                                />
                                 <CardHeader>
                                     <CardTitle>Adopt</CardTitle>
                                     <CardDescription>
@@ -291,24 +291,18 @@ export default function Dashboard() {
                                             {matchError}
                                         </div>
                                     )}
-
                                     {matchedDog && (
                                         <div className="mt-4">
                                             <h3 className="font-bold text-lg mb-2">Your Match: {matchedDog.name}</h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded font-publicSans">
-                                                <div className="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center h-full min-h-[300px]">
-                                                    {!imageError ? (
-                                                        <img 
-                                                            src={matchedDog.img} 
-                                                            alt={`Photo of ${matchedDog.name}`}
-                                                            className="max-w-full max-h-full object-contain p-2"
-                                                            onError={() => setImageError(true)}
-                                                        />
-                                                    ) : (
-                                                        <div className="font-publicSans text-2xl font-semibold">
-                                                            {matchedDog.name[0]}
-                                                        </div>
-                                                    )}
+                                                <div className="relative w-full h-80 mb-4 overflow-hidden rounded-md">
+                                                    <Image 
+                                                        src={matchedDog.img}
+                                                        alt={matchedDog.name}
+                                                        layout="fill"
+                                                        objectFit="cover"
+                                                        className="rounded-md"
+                                                    />
                                                 </div>
                                                 <div className="flex flex-col">
                                                     <div className="mb-4">
@@ -345,6 +339,12 @@ export default function Dashboard() {
                             </Card>
                         </TabsContent>
                     </Tabs>
+                    <Confetti
+                        width={width}
+                        height={height}
+                        recycle={false}
+                        run={showConfetti && !!matchedDog && !isLoading}
+                    />
                 </div>
             </main>
         </>

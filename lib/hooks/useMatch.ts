@@ -1,6 +1,5 @@
 import useSWR from 'swr';
 import { useState } from 'react';
-import { Dog } from '@/types';
 
 // Custom fetcher that makes a POST request with dog IDs
 const postFetcher = (url: string, dogIds: string[]) => 
