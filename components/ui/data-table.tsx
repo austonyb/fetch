@@ -1,33 +1,9 @@
 "use client"
 
-import {
-  ColumnDef,
-  ColumnFiltersState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  SortingState,
-  useReactTable,
-  VisibilityState,
-} from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal, ImageIcon } from "lucide-react"
 import * as React from "react"
 import Image from "next/image"
-
+import { Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -41,7 +17,7 @@ import type { Dog } from "@/lib/types"
 
 interface DataTableProps {
   data: Dog[]
-  onRowSelect?: (selectedDogs: Dog[]) => void
+  onLike?: (dogId: string) => void
 }
 
 function DogImage({ src, name }: { src: string; name: string }) {
@@ -52,7 +28,7 @@ function DogImage({ src, name }: { src: string; name: string }) {
     <div className="relative h-12 w-12 overflow-hidden rounded-base border-2 border-border bg-bw">
       {error ? (
         <div className="flex h-full w-full items-center justify-center bg-bw">
-          <ImageIcon className="h-6 w-6 text-text" />
+          <span className="text-xs text-text">No img</span>
         </div>
       ) : (
         <Image
@@ -78,272 +54,73 @@ function DogImage({ src, name }: { src: string; name: string }) {
   )
 }
 
-export const columns: ColumnDef<Dog>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-        className="border-2 border-border bg-bw"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="border-2 border-border bg-bw"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "img",
-    header: "Photo",
-    cell: ({ row }) => (
-      <DogImage src={row.getValue("img")} name={row.getValue("name")} />
-    ),
-    enableSorting: false,
-  },
-  {
-    accessorKey: "name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="noShadow"
-          size="sm"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="font-publicSans"
-        >
-          Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div className="font-publicSans">{row.getValue("name")}</div>,
-  },
-  {
-    accessorKey: "breed",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="noShadow"
-          size="sm"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="font-publicSans"
-        >
-          Breed
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div className="font-publicSans">{row.getValue("breed")}</div>,
-  },
-  {
-    accessorKey: "age",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="noShadow"
-          size="sm"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="font-publicSans"
-        >
-          Age
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div className="text-center font-publicSans">{row.getValue("age")}</div>,
-  },
-  {
-    accessorKey: "zip_code",
-    header: "Location",
-    cell: ({ row }) => <div className="font-publicSans">{row.getValue("zip_code")}</div>,
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const dog = row.original
+export function DataTable({ data, onLike }: DataTableProps) {
+  const [likedDogs, setLikedDogs] = React.useState<Record<string, boolean>>({})
 
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="noShadow" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-bw border-2 border-border">
-            <DropdownMenuLabel className="font-publicSans text-text">Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(dog.id)}
-              className="font-publicSans text-text"
-            >
-              Copy dog ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-border" />
-            <DropdownMenuItem className="font-publicSans text-text">View details</DropdownMenuItem>
-            <DropdownMenuItem className="font-publicSans text-text">Match with dog</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
-  },
-]
-
-export function DataTable({ data, onRowSelect }: DataTableProps) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = React.useState({})
-
-  const table = useReactTable({
-    data,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
-  })
-
-  React.useEffect(() => {
-    if (onRowSelect) {
-      const selectedRows = table.getSelectedRowModel().rows
-      const selectedDogs = selectedRows.map(row => row.original)
-      onRowSelect(selectedDogs)
-    }
-  }, [rowSelection, onRowSelect, table])
+  const handleLike = React.useCallback((dogId: string) => {
+    setLikedDogs(prev => {
+      const newState = { ...prev, [dogId]: !prev[dogId] }
+      
+      // Call the onLike prop if provided
+      if (onLike) {
+        onLike(dogId)
+      }
+      
+      return newState
+    })
+  }, [onLike])
 
   return (
-    <div className="w-full font-publicSans">
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Filter by name..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="neutral" className="ml-auto">
-              Columns <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-bw border-2 border-border">
-            <DropdownMenuLabel className="font-publicSans text-text">Columns</DropdownMenuLabel>
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize text-text font-publicSans"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                )
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <div className="rounded-base border-2 border-border bg-main">
+    <div className="w-full">
+      <div className="rounded-base border-2 border-border bg-main overflow-hidden">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id} className="text-mtext">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  )
-                })}
-              </TableRow>
-            ))}
+            <TableRow>
+              <TableHead className="text-mtext font-publicSans">Photo</TableHead>
+              <TableHead className="text-mtext font-publicSans">Name</TableHead>
+              <TableHead className="text-mtext font-publicSans">Breed</TableHead>
+              <TableHead className="text-mtext font-publicSans">Age</TableHead>
+              <TableHead className="text-mtext font-publicSans">Location</TableHead>
+              <TableHead className="text-mtext font-publicSans w-[50px]">Like</TableHead>
+            </TableRow>
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+            {data && data.length > 0 ? (
+              data.map((dog) => (
+                <TableRow key={dog.id}>
+                  <TableCell>
+                    <DogImage src={dog.img} name={dog.name} />
+                  </TableCell>
+                  <TableCell className="font-publicSans text-text">{dog.name}</TableCell>
+                  <TableCell className="font-publicSans text-text">{dog.breed}</TableCell>
+                  <TableCell className="font-publicSans text-text text-center">{dog.age}</TableCell>
+                  <TableCell className="font-publicSans text-text">{dog.zip_code}</TableCell>
+                  <TableCell>
+                    <Button 
+                      variant="noShadow" 
+                      size="icon" 
+                      onClick={() => handleLike(dog.id)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Heart 
+                        className={cn(
+                          "h-5 w-5 transition-colors", 
+                          likedDogs[dog.id] ? "fill-red-500 text-red-500" : "text-gray-500"
+                        )} 
+                      />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center text-mtext"
-                >
-                  No results.
+                <TableCell colSpan={6} className="h-24 text-center text-mtext font-publicSans">
+                  No dogs found.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
-      </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-sm text-text">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="neutral"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="neutral"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
       </div>
     </div>
   )

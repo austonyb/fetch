@@ -12,6 +12,7 @@ import type { Dog } from '@/types'
 export default function Dashboard() {
     const [selectedBreed, setSelectedBreed] = useState<string>('')
     const [selectedDogs, setSelectedDogs] = useState<Dog[]>([])
+    const [likedDogIds, setLikedDogIds] = useState<string[]>([])
     const { breeds } = useBreeds()
     const { search } = useSearch({
         breeds: selectedBreed ? [selectedBreed] : undefined,
@@ -23,8 +24,13 @@ export default function Dashboard() {
         setSelectedBreed(breeds[breeds.length - 1] || '')
     }
 
-    const handleDogSelection = (dogs: Dog[]) => {
-        setSelectedDogs(dogs)
+    const handleLikeDog = (dogId: string) => {
+        setLikedDogIds(prev => {
+            // If already liked, remove it, otherwise add it
+            return prev.includes(dogId) 
+                ? prev.filter(id => id !== dogId) 
+                : [...prev, dogId]
+        })
     }
 
     return (
@@ -51,11 +57,11 @@ export default function Dashboard() {
                 <div className="rounded-base border-2 border-border bg-main p-6">
                     <DataTable 
                         data={search.data} 
-                        onRowSelect={handleDogSelection}
+                        onLike={handleLikeDog}
                     />
-                    {selectedDogs.length > 0 && (
+                    {likedDogIds.length > 0 && (
                         <div className="mt-4 text-right font-publicSans text-sm text-text">
-                            {selectedDogs.length} dogs selected
+                            {likedDogIds.length} dog{likedDogIds.length === 1 ? '' : 's'} liked
                         </div>
                     )}
                 </div>

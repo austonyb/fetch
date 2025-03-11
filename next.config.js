@@ -12,6 +12,10 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  // Configure allowed image domains
+  images: {
+    domains: ['frontend-take-home.fetch.com'],
+  },
 };
 
 module.exports = nextConfig;
