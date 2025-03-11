@@ -2,8 +2,11 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { Heart, ChevronUp, ChevronDown } from "lucide-react"
+import { Heart, ChevronUp, ChevronDown, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog'
 import {
   Table,
   TableBody,
@@ -12,6 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Skeleton } from "@/components/ui/skeleton"
+import Map from "@/components/map"
 import useStore from "@/lib/hooks/useStore"
 import { cn } from "@/lib/utils"
 import type { Dog } from "@/lib/types"
@@ -75,7 +80,10 @@ export function DataTable({
 }: DataTableProps) {
   const { likedDogs, addLikedDog, removeLikedDog } = useStore()
 
-  const handleLike = React.useCallback((dogId: string) => {
+  const handleLike = React.useCallback((dogId: string, e: React.MouseEvent) => {
+    // Stop event propagation to prevent the dialog from opening
+    e.stopPropagation();
+    
     const isLiked = likedDogs.includes(dogId)
     
     if (isLiked) {
@@ -155,69 +163,110 @@ export function DataTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data && data.length > 0 ? (
-              data.map((dog) => (
-                <TableRow key={dog.id}>
-                  <TableCell>
-                    <DogImage src={dog.img} name={dog.name} />
-                  </TableCell>
-                  <TableCell className="font-publicSans text-text">{dog.name}</TableCell>
-                  <TableCell className="font-publicSans text-text">{dog.breed}</TableCell>
-                  <TableCell className="font-publicSans text-text">{dog.age}</TableCell>
-                  <TableCell className="font-publicSans text-text">{dog.zip_code}</TableCell>
-                  <TableCell>
-                    <Button 
-                      variant="noShadow" 
-                      size="icon" 
-                      onClick={() => handleLike(dog.id)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Heart 
-                        className={cn(
-                          "h-5 w-5 transition-colors", 
-                          likedDogs.includes(dog.id) ? "fill-red-500 text-red-500" : "text-gray-500"
-                        )} 
-                      />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center text-mtext font-publicSans">
-                  No dogs found.
-                </TableCell>
-              </TableRow>
-            )}
+            {data.map((dog) => (
+              <Dialog key={dog.id}>
+                <DialogTrigger asChild>
+                  <TableRow className="border-t-2 border-border cursor-pointer hover:bg-gray-50">
+                    <TableCell className="w-[60px]">
+                      <DogImage src={dog.img} name={dog.name} />
+                    </TableCell>
+                    <TableCell className="font-publicSans text-text">{dog.name}</TableCell>
+                    <TableCell className="font-publicSans text-text">{dog.breed}</TableCell>
+                    <TableCell className="font-publicSans text-text">{dog.age}</TableCell>
+                    <TableCell className="font-publicSans text-text">{dog.zip_code}</TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Button 
+                        variant="noShadow" 
+                        size="icon" 
+                        onClick={(e) => handleLike(dog.id, e)}
+                        className={likedDogs.includes(dog.id) ? 'text-red-500' : 'text-gray-400'}
+                      >
+                        <Heart className="h-4 w-4" fill={likedDogs.includes(dog.id) ? 'currentColor' : 'none'} />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[700px]">
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl font-publicSans">{dog.name}</DialogTitle>
+                    <DialogDescription className="text-md font-publicSans">
+                      {dog.breed}
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="py-4">
+                    <div className="flex items-start gap-6">
+                      <div className="w-1/3">
+                        <div className="w-full h-40 overflow-hidden rounded-base mb-2">
+                          <Image
+                            src={dog.img}
+                            alt={dog.name}
+                            width={200}
+                            height={160}
+                            quality={90}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <Button 
+                          variant="noShadow" 
+                          size="sm"
+                          className="w-full mt-2"
+                          onClick={(e) => handleLike(dog.id, e)}
+                        >
+                          <Heart className="h-4 w-4 mr-2" fill={likedDogs.includes(dog.id) ? 'currentColor' : 'none'} />
+                          {likedDogs.includes(dog.id) ? 'Liked' : 'Like'}
+                        </Button>
+                      </div>
+                      <div className="w-2/3">
+                        <div className="grid grid-cols-1 gap-y-4">
+                          <div>
+                            <Label className="text-sm text-gray-500">Age</Label>
+                            <p className="font-bold font-publicSans">{dog.age} years</p>
+                          </div>
+                          <div>
+                            <Label className="text-sm text-gray-500">Location</Label>
+                            <p className="font-bold font-publicSans flex items-center mb-2">
+                              <MapPin className="h-4 w-4 mr-1" /> {dog.zip_code}
+                            </p>
+                            <div className="h-[200px] rounded-md overflow-hidden border border-gray-200">
+                              <Map zipCode={dog.zip_code} dogName={dog.name} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <DialogFooter>
+                    <Button type="button" className="font-publicSans">Adopt {dog.name}</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            ))}
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-text flex-1 text-sm font-publicSans">
-          {data.length > 0 ? (
-            <>
-              Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, totalCount)} of {totalCount} dogs
-            </>
-          ) : (
-            "No dogs found"
-          )}
+      <div className="mt-4 flex justify-between items-center font-publicSans">
+        <div className="text-sm text-text">
+          Showing {Math.min(totalCount, (currentPage * pageSize) + 1)}-{Math.min(totalCount, (currentPage + 1) * pageSize)} of {totalCount} dogs
         </div>
-        <div className="space-x-2">
-          <Button
-            variant="noShadow"
-            size="sm"
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="noShadow" 
+            size="sm" 
             onClick={() => onPageChange(currentPage - 1)}
             disabled={!canGoPrevious}
-            className="font-publicSans"
           >
             Previous
           </Button>
-          <Button
-            variant="noShadow"
-            size="sm"
+          <div className="text-sm text-text">
+            Page {currentPage + 1} of {totalPages}
+          </div>
+          <Button 
+            variant="noShadow" 
+            size="sm" 
             onClick={() => onPageChange(currentPage + 1)}
             disabled={!canGoNext}
-            className="font-publicSans"
           >
             Next
           </Button>
