@@ -7,6 +7,7 @@ import { useBreeds } from '@/lib/hooks/useBreeds'
 import { useDog } from '@/lib/hooks/useDog'
 import { useSearch } from '@/lib/hooks/useSearch'
 import { DataTable } from '@/components/ui/data-table'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { Dog } from '@/types'
 
 export default function Dashboard() {
@@ -61,18 +62,36 @@ export default function Dashboard() {
                         onSelect={handleBreedSelect}
                         value={selectedBreed ? [selectedBreed] : []}
                     />
-                    {/* {selectedBreed && (
-                        <p className="mt-4 text-center font-publicSans text-sm text-text">
-                            Selected breed: {breeds.find(b => b.value === selectedBreed)?.label || selectedBreed}
-                        </p>
-                    )} */}
                 </div>
 
                 <div className="rounded-base border-2 border-border bg-main p-6">
-                    <DataTable 
-                        data={search.data} 
-                        onLike={handleLikeDog}
-                    />
+                    {search.isLoading ? (
+                        <div className="space-y-4">
+                            <div className="h-8 w-full flex items-center gap-4">
+                                <Skeleton className="h-6 w-16" />
+                                <Skeleton className="h-6 w-24" />
+                                <Skeleton className="h-6 w-20" />
+                                <Skeleton className="h-6 w-12" />
+                                <Skeleton className="h-6 w-24" />
+                                <Skeleton className="h-6 w-8" />
+                            </div>
+                            {[...Array(5)].map((_, index) => (
+                                <div key={index} className="h-16 w-full flex items-center gap-4">
+                                    <Skeleton className="h-12 w-12 rounded-base" />
+                                    <Skeleton className="h-5 w-32" />
+                                    <Skeleton className="h-5 w-48" />
+                                    <Skeleton className="h-5 w-8" />
+                                    <Skeleton className="h-5 w-16" />
+                                    <Skeleton className="h-8 w-8 rounded-full" />
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <DataTable 
+                            data={search.data} 
+                            onLike={handleLikeDog}
+                        />
+                    )}
                     {likedDogIds.length > 0 && (
                         <div className="mt-4 text-right font-publicSans text-sm text-text">
                             {likedDogIds.length} dog{likedDogIds.length === 1 ? '' : 's'} liked

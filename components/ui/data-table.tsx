@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import useStore from "@/lib/hooks/useStore"
 import { cn } from "@/lib/utils"
 import type { Dog } from "@/lib/types"
 
@@ -55,20 +56,21 @@ function DogImage({ src, name }: { src: string; name: string }) {
 }
 
 export function DataTable({ data, onLike }: DataTableProps) {
-  const [likedDogs, setLikedDogs] = React.useState<Record<string, boolean>>({})
+  const { likedDogs, addLikedDog, removeLikedDog } = useStore()
 
   const handleLike = React.useCallback((dogId: string) => {
-    setLikedDogs(prev => {
-      const newState = { ...prev, [dogId]: !prev[dogId] }
-      
-      // Call the onLike prop if provided
-      if (onLike) {
-        onLike(dogId)
-      }
-      
-      return newState
-    })
-  }, [onLike])
+    const isLiked = likedDogs.includes(dogId)
+    
+    if (isLiked) {
+      removeLikedDog(dogId)
+    } else {
+      addLikedDog(dogId)
+    }
+    
+    if (onLike) {
+      onLike(dogId)
+    }
+  }, [likedDogs, addLikedDog, removeLikedDog, onLike])
 
   return (
     <div className="w-full">
@@ -105,7 +107,7 @@ export function DataTable({ data, onLike }: DataTableProps) {
                       <Heart 
                         className={cn(
                           "h-5 w-5 transition-colors", 
-                          likedDogs[dog.id] ? "fill-red-500 text-red-500" : "text-gray-500"
+                          likedDogs.includes(dog.id) ? "fill-red-500 text-red-500" : "text-gray-500"
                         )} 
                       />
                     </Button>

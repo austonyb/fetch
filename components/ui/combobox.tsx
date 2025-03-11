@@ -28,7 +28,7 @@ interface ComboboxProps {
 }
 
 export function Combobox({ 
-  breeds, 
+  breeds = [], 
   onSelect,
   value: controlledValues,
   defaultValue = [],
@@ -37,6 +37,11 @@ export function Combobox({
   const [open, setOpen] = React.useState(false)
   const [localValues, setLocalValues] = React.useState<string[]>(defaultValue)
   const [activeIndex, setActiveIndex] = React.useState<number>(-1)
+
+  // Ensure breeds is always an array
+  const safeBreeds = React.useMemo(() => {
+    return Array.isArray(breeds) ? breeds : []
+  }, [breeds])
 
   // Use controlled or uncontrolled values
   const values = controlledValues ?? localValues
@@ -54,7 +59,7 @@ export function Combobox({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault()
-        setActiveIndex(prev => Math.min(prev + 1, breeds.length - 1))
+        setActiveIndex(prev => Math.min(prev + 1, safeBreeds.length - 1))
         break
       case 'ArrowUp':
         e.preventDefault()
@@ -64,7 +69,7 @@ export function Combobox({
       case 'Enter':
         e.preventDefault()
         if (activeIndex >= 0) {
-          const breed = breeds[activeIndex]
+          const breed = safeBreeds[activeIndex]
           const newValues = values.includes(breed.value)
             ? values.filter(v => v !== breed.value)
             : [...values, breed.value]
@@ -75,7 +80,7 @@ export function Combobox({
         setOpen(false)
         break
     }
-  }, [open, breeds, activeIndex, values, setValue])
+  }, [open, safeBreeds, activeIndex, values, setValue])
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -89,7 +94,7 @@ export function Combobox({
           <div className="flex-1 truncate text-left text-text">
             {values.length > 0 ? (
               <span className="mr-2">
-                {values.map(v => breeds.find((breed) => breed.value === v)?.label).join(", ")}
+                {values.map(v => safeBreeds.find((breed) => breed.value === v)?.label || v).join(", ")}
               </span>
             ) : (
               "Select breeds..."
@@ -142,7 +147,7 @@ export function Combobox({
           <CommandList>
             <CommandEmpty className="font-publicSans text-text py-6">No breed found.</CommandEmpty>
             <CommandGroup className="max-h-[300px] overflow-y-auto">
-              {breeds.map((breed, index) => (
+              {safeBreeds.map((breed, index) => (
                 <CommandItem
                   key={breed.value}
                   value={breed.value}
