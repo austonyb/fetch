@@ -1,7 +1,7 @@
 "use client"
 
 import { CommandList } from "cmdk"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, X } from "lucide-react"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,16 +16,66 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 interface ComboboxProps {
   breeds: { value: string; label: string; }[]
-  onSelect?: (value: string) => void
+  onSelect?: (values: string[]) => void
+  value?: string[]
+  defaultValue?: string[]
+  multiple?: boolean
 }
 
-export function Combobox({ breeds, onSelect }: ComboboxProps) {
+export function Combobox({ 
+  breeds, 
+  onSelect,
+  value: controlledValues,
+  defaultValue = [],
+  multiple = false
+}: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
-  const [value, setValue] = React.useState("")
+  const [localValues, setLocalValues] = React.useState<string[]>(defaultValue)
+  const [activeIndex, setActiveIndex] = React.useState<number>(-1)
+
+  // Use controlled or uncontrolled values
+  const values = controlledValues ?? localValues
+  const setValue = React.useCallback((newValues: string[]) => {
+    // In single select mode, only keep the last value
+    const finalValues = multiple ? newValues : newValues.slice(-1)
+    setLocalValues(finalValues)
+    onSelect?.(finalValues)
+  }, [onSelect, multiple])
+
+  // Keyboard navigation
+  const handleKeyDown = React.useCallback((e: React.KeyboardEvent) => {
+    if (!open) return
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault()
+        setActiveIndex(prev => Math.min(prev + 1, breeds.length - 1))
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        setActiveIndex(prev => Math.max(prev - 1, -1))
+        break
+      case ' ':
+      case 'Enter':
+        e.preventDefault()
+        if (activeIndex >= 0) {
+          const breed = breeds[activeIndex]
+          const newValues = values.includes(breed.value)
+            ? values.filter(v => v !== breed.value)
+            : [...values, breed.value]
+          setValue(newValues)
+        }
+        break
+      case 'Escape':
+        setOpen(false)
+        break
+    }
+  }, [open, breeds, activeIndex, values, setValue])
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -34,35 +84,86 @@ export function Combobox({ breeds, onSelect }: ComboboxProps) {
           variant="noShadow"
           role="combobox"
           aria-expanded={open}
-          className="w-[300px] justify-between font-publicSans"
+          className="w-[300px] justify-between font-publicSans group relative"
         >
-          {value
-            ? breeds.find((breed) => breed.value === value)?.label
-            : "Select breed..."}
-          <ChevronsUpDown color="black" className="ml-2 h-4 w-4 shrink-0" />
+          <div className="flex-1 truncate text-left text-text">
+            {values.length > 0 ? (
+              <span className="mr-2">
+                {values.map(v => breeds.find((breed) => breed.value === v)?.label).join(", ")}
+              </span>
+            ) : (
+              "Select breeds..."
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            {values.length > 0 && (
+              <>
+                {multiple && (
+                  <Badge 
+                    variant="neutral" 
+                    className="rounded-base px-2 font-normal font-publicSans bg-bw text-text"
+                  >
+                    {values.length}
+                  </Badge>
+                )}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="h-4 w-4 p-0 opacity-70 hover:opacity-100 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setValue([])
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setValue([])
+                    }
+                  }}
+                >
+                  <X className="h-3 w-3 text-text" />
+                </div>
+              </>
+            )}
+            <ChevronsUpDown className="h-4 w-4 shrink-0 text-text" />
+          </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[300px] p-0">
-        <Command className="rounded-lg border border-border">
-          <CommandInput placeholder="Search breed..." className="font-publicSans" />
+      <PopoverContent className="w-[300px] p-0 border-2 border-border bg-bw">
+        <Command 
+          className="rounded-base border-0"
+          onKeyDown={handleKeyDown}
+        >
+          <CommandInput 
+            placeholder="Search breeds..." 
+            className="font-publicSans text-text"
+          />
           <CommandList>
-            <CommandEmpty className="font-publicSans">No breed found.</CommandEmpty>
+            <CommandEmpty className="font-publicSans text-text py-6">No breed found.</CommandEmpty>
             <CommandGroup className="max-h-[300px] overflow-y-auto">
-              {breeds.map((breed) => (
+              {breeds.map((breed, index) => (
                 <CommandItem
                   key={breed.value}
                   value={breed.value}
                   onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue)
-                    onSelect?.(currentValue)
-                    setOpen(false)
+                    const newValues = values.includes(currentValue)
+                      ? values.filter(v => v !== currentValue)
+                      : [...values, currentValue]
+                    setValue(newValues)
+                    if (!multiple) {
+                      setOpen(false)
+                    }
                   }}
-                  className="font-publicSans"
+                  className={cn(
+                    "font-publicSans text-text",
+                    index === activeIndex && "bg-main"
+                  )}
                 >
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === breed.value ? "opacity-100" : "opacity-0",
+                      values.includes(breed.value) ? "opacity-100" : "opacity-0"
                     )}
                   />
                   {breed.label}
