@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Logout from '@/components/logout'
 import { Combobox } from '@/components/ui/combobox'
 import { useBreeds } from '@/lib/hooks/useBreeds'
@@ -16,22 +16,24 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import useStore from '@/lib/hooks/useStore';
+import { useMatch } from '@/lib/hooks/useMatch'
+import { useWindowSize } from 'react-use'
+import Confetti from 'react-confetti'
 
 export default function Dashboard() {
+    const { width, height } = useWindowSize()
     const [selectedBreed, setSelectedBreed] = useState<string>('')
     // Define searchParams with partial SearchParams type to avoid TypeScript errors
     const [searchParams, setSearchParams] = useState<Partial<{
         breeds: string[] | undefined,
         size: number,
         page: number,
-        sort: any // Use any here to avoid TypeScript errors with template literals
+        sort: any
     }>>({
         breeds: undefined,
-        size: 25, // Show 25 dogs per page by default
+        size: 25,
         page: 0
     })
 
@@ -43,10 +45,20 @@ export default function Dashboard() {
         direction: 'asc'
     })
 
+    const [showConfetti, setShowConfetti] = useState(false)
+
     const { breeds } = useBreeds()
     const { search } = useSearch(searchParams)
 
     const { likedDogs } = useStore()
+    const { match, isLoading: isMatchLoading, findMatch } = useMatch(likedDogs)
+
+    // Effect to show confetti when match data arrives
+    useEffect(() => {
+        if (match && !isMatchLoading) {
+            setShowConfetti(true);
+        }
+    }, [match, isMatchLoading]);
 
     const handleBreedSelect = (breeds: string[]) => {
         // Take the last selected breed, or empty string if none selected
@@ -81,6 +93,10 @@ export default function Dashboard() {
             sort: sortString,
             page: 0
         }));
+    }
+
+    const handleFindMatch = () => {
+        findMatch();
     }
 
     return (
@@ -158,25 +174,39 @@ export default function Dashboard() {
                         </TabsContent>
                         <TabsContent value="adopt">
                             <Card>
+                                <Confetti
+                                    width={width}
+                                    height={height}
+                                    recycle={false}
+                                    run={showConfetti && !!match && !isMatchLoading}
+                                />
                                 <CardHeader>
                                     <CardTitle>Adopt</CardTitle>
                                     <CardDescription>
-                                        Adopt a dog here.
+                                        Adopt a dog here!
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-2">
-                                    <div className="space-y-1">
-                                        <Label htmlFor="current">Current password</Label>
-                                        <Input id="current" type="password" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Label htmlFor="new">New password</Label>
-                                        <Input id="new" type="password" />
-                                    </div>
+                                    You have selected {likedDogs.length} dog{likedDogs.length === 1 ? '' : 's'}
+                                    <br />
+                                    What will your match be?
+
+                                    {match && (
+                                        <div className="mt-4 p-4 border rounded font-publicSans">
+                                            <h3 className="font-bold text-lg mb-2">Your Match: {match.name}</h3>
+                                            <p>Breed: {match.breed}</p>
+                                            <p>Age: {match.age} years</p>
+                                            <p>Location: {match.zip_code}</p>
+                                        </div>
+                                    )}
                                 </CardContent>
                                 <CardFooter>
-                                    <Button variant="noShadow" className="w-full bg-bw text-text">
-                                        Save password
+                                    <Button
+                                        className="w-full bg-bw text-text font-publicSans"
+                                        onClick={handleFindMatch}
+                                        disabled={isMatchLoading || likedDogs.length === 0}
+                                    >
+                                        {isMatchLoading ? 'Finding your match...' : 'Find your perfect match'}
                                     </Button>
                                 </CardFooter>
                             </Card>

@@ -15,18 +15,24 @@ export async function POST(request: NextRequest) {
 
     const breedsUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/dogs/match`;
     
-    const response = await fetch(breedsUrl, {
+    // Using type assertion to handle the duplex option that TypeScript doesn't know about yet
+    const fetchOptions = {
       headers: {
-        'Cookie': `fetch-access-token=${cookie.value}`
+        'Cookie': `fetch-access-token=${cookie.value}`,
+        'Content-Type': 'application/json'
       },
       method: 'POST',
-      body: request.body
-    });
+      body: request.body,
+      duplex: 'half' // Required for requests with a body in newer fetch implementations
+    } as RequestInit;
+    
+    const response = await fetch(breedsUrl, fetchOptions);
 
     const data = await response.json();
 
     // returns dog objs
-    return NextResponse.json(data, { status: response.status });
+    console.log(data.match);
+    return NextResponse.json(data?.match || null, { status: response.status });
   } catch (error) {
     console.error('Dog proxy error:', error);
     return NextResponse.json(
