@@ -61,7 +61,9 @@ export default function Login() {
 
             // Wait briefly before redirecting
             setTimeout(() => {
-                window.location.href = '/dashboard'
+                if (typeof window !== 'undefined') {
+                    window.location.href = '/dashboard'
+                }
             }, 500)
             
         } catch (err) {

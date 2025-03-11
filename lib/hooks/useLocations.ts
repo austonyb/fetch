@@ -1,8 +1,6 @@
 import useSWR from 'swr';
 import { Location, LocationSearchParams, LocationSearchResult } from '../types';
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
 /**
  * Hook to fetch location data for one or more zip codes
  * @param zipCodes Array of zip codes to fetch location data for
@@ -47,6 +45,7 @@ export function useLocationSearch(params: LocationSearchParams | null) {
 /**
  * Helper function for POST requests with JSON body
  */
+//eslint-disable-next-line
 function postFetcher(url: string, body: any) {
   return fetch(url, {
     method: 'POST',

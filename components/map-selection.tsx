@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { MapContainer, TileLayer, Rectangle, useMap, useMapEvents } from 'react-leaflet'
 import L, { LatLngBounds } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { Coordinates } from '@/lib/types'
 
 // Fix Leaflet icon issues in Next.js
 const fixLeafletIcon = () => {

@@ -3,13 +3,6 @@
 import * as React from "react"
 import Image from "next/image"
 import { Heart, ChevronUp, ChevronDown, MapPin } from "lucide-react"
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getPaginationRowModel,
-  useReactTable,
-} from "@tanstack/react-table"
 
 import {
   Table,
@@ -22,7 +15,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog'
-import { Skeleton } from "@/components/ui/skeleton"
 import Map from "@/components/map"
 import useStore from "@/lib/hooks/useStore"
 import { cn } from "@/lib/utils"

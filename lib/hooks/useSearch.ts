@@ -55,6 +55,7 @@ interface SearchResponse {
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
+//eslint-disable-next-line
 const postFetcher = (url: string, body: any) => 
   fetch(url, {
     method: 'POST',

@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic'
 import { useState, useEffect } from 'react'
 import Logout from '@/components/logout'
 import { Combobox } from '@/components/ui/combobox'
@@ -21,14 +22,17 @@ import useStore from '@/lib/hooks/useStore';
 import { useMatch } from '@/lib/hooks/useMatch'
 import { useDog } from '@/lib/hooks/useDog'
 import { useWindowSize } from 'react-use'
-import Confetti from 'react-confetti';
 import Map from '@/components/map';
 import MapSelection from '@/components/map-selection';
 import { Coordinates } from '@/lib/types';
 import Image from "next/image"
 
+const Confetti = dynamic(() => import('react-confetti'), {
+    ssr: false
+})
+
 export default function Dashboard() {
-    const { width, height } = useWindowSize()
+    const { width = 0, height = 0 } = useWindowSize()
     const [selectedBreed, setSelectedBreed] = useState<string>('')
     // Define searchParams with partial SearchParams type to avoid TypeScript errors
     const [searchParams, setSearchParams] = useState<Partial<{
@@ -55,7 +59,6 @@ export default function Dashboard() {
         direction: 'asc'
     })
 
-    const [imageError, setImageError] = useState(false);
     const [showLocationMap, setShowLocationMap] = useState(false);
     const [locationFilter, setLocationFilter] = useState<{
         top_left: Coordinates,
@@ -82,7 +85,6 @@ export default function Dashboard() {
         if (matchedDog && !isLoading) {
             setShowConfetti(true);
             setMatchError(null);
-            setImageError(false); // Reset image error state when new match is found
         } else if (match && !matchedDog && !isDogLoading) {
             // If we have a match ID but no dog data, it means there was an error fetching the dog
             setMatchError("Couldn't load the details of your matched dog.");
@@ -131,6 +133,7 @@ export default function Dashboard() {
 
         // Ensure field is valid for sort parameter
         const validFields = ['breeds', 'zipCodes', 'ageMin', 'ageMax', 'size', 'age', 'name', 'breed'] as const;
+        //eslint-disable-next-line
         const validField = validFields.includes(field as any) ? field as typeof validFields[number] : 'name';
         
         // Create properly typed sort string

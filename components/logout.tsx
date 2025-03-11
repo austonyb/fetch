@@ -1,3 +1,5 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 
 export default function Logout() {
@@ -9,7 +11,9 @@ export default function Logout() {
                     credentials: 'include'
                 })
                 .then(() => {
-                    window.location.href = '/login'
+                    if (typeof window !== 'undefined') {
+                        window.location.href = '/login'
+                    }
                 })
                 .catch((error) => {
                     console.error('Logout error:', error)
