@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { Heart } from "lucide-react"
+import { Heart, ChevronUp, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -23,6 +23,9 @@ interface DataTableProps {
   currentPage: number
   onPageChange: (page: number) => void
   pageSize: number
+  onSort?: (field: string, direction: 'asc' | 'desc') => void
+  sortField?: string
+  sortDirection?: 'asc' | 'desc'
 }
 
 function DogImage({ src, name }: { src: string; name: string }) {
@@ -65,7 +68,10 @@ export function DataTable({
   totalCount = 0,
   currentPage = 0,
   onPageChange,
-  pageSize = 25
+  pageSize = 25,
+  onSort,
+  sortField,
+  sortDirection = 'asc'
 }: DataTableProps) {
   const { likedDogs, addLikedDog, removeLikedDog } = useStore()
 
@@ -87,19 +93,65 @@ export function DataTable({
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
   const canGoNext = currentPage < totalPages - 1;
   const canGoPrevious = currentPage > 0;
+  
+  // Handle sorting
+  const handleSortChange = (field: string) => {
+    if (!onSort) return;
+    
+    // If clicking the same field, toggle direction
+    if (field === sortField) {
+      onSort(field, sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Default to ascending for a new field
+      onSort(field, 'asc');
+    }
+  };
+
+  // Helper to show sort indicators
+  const getSortIcon = (field: string) => {
+    if (field !== sortField) return null;
+    
+    return sortDirection === 'asc' 
+      ? <ChevronUp className="ml-1 h-4 w-4" />
+      : <ChevronDown className="ml-1 h-4 w-4" />;
+  };
 
   return (
     <div className="w-full">
       <div className="rounded-base border-2 border-border bg-main overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="text-mtext font-publicSans">Photo</TableHead>
-              <TableHead className="text-mtext font-publicSans">Name</TableHead>
-              <TableHead className="text-mtext font-publicSans">Breed</TableHead>
-              <TableHead className="text-mtext font-publicSans">Age</TableHead>
-              <TableHead className="text-mtext font-publicSans">Location {`(Zip Code)`}</TableHead>
-              <TableHead className="text-mtext font-publicSans w-[50px]">Like</TableHead>
+            <TableRow className="hover:bg-none">
+              <TableHead className="font-bold font-publicSans">Image</TableHead>
+              <TableHead 
+                className="font-bold font-publicSans cursor-pointer"
+                onClick={() => handleSortChange('name')}
+              >
+                <div className="flex items-center">
+                  Name
+                  {getSortIcon('name')}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="font-bold font-publicSans cursor-pointer"
+                onClick={() => handleSortChange('breed')}
+              >
+                <div className="flex items-center">
+                  Breed
+                  {getSortIcon('breed')}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="font-bold font-publicSans cursor-pointer"
+                onClick={() => handleSortChange('age')}
+              >
+                <div className="flex items-center">
+                  Age
+                  {getSortIcon('age')}
+                </div>
+              </TableHead>
+              <TableHead className="font-bold font-publicSans">Zip Code</TableHead>
+              <TableHead className="font-bold font-publicSans"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -111,7 +163,7 @@ export function DataTable({
                   </TableCell>
                   <TableCell className="font-publicSans text-text">{dog.name}</TableCell>
                   <TableCell className="font-publicSans text-text">{dog.breed}</TableCell>
-                  <TableCell className="font-publicSans text-text text-center">{dog.age}</TableCell>
+                  <TableCell className="font-publicSans text-text">{dog.age}</TableCell>
                   <TableCell className="font-publicSans text-text">{dog.zip_code}</TableCell>
                   <TableCell>
                     <Button 

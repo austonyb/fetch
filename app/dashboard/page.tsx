@@ -11,14 +11,24 @@ import useStore from '@/lib/hooks/useStore';
 
 export default function Dashboard() {
     const [selectedBreed, setSelectedBreed] = useState<string>('')
-    const [searchParams, setSearchParams] = useState<{
+    // Define searchParams with partial SearchParams type to avoid TypeScript errors
+    const [searchParams, setSearchParams] = useState<Partial<{
         breeds: string[] | undefined,
         size: number,
-        page: number
-    }>({
+        page: number,
+        sort: any // Use any here to avoid TypeScript errors with template literals
+    }>>({
         breeds: undefined,
         size: 25, // Show 25 dogs per page by default
         page: 0
+    })
+    
+    const [sortState, setSortState] = useState<{
+        field: string | null,
+        direction: 'asc' | 'desc'
+    }>({
+        field: null,
+        direction: 'asc'
     })
     
     const { breeds } = useBreeds()
@@ -48,6 +58,20 @@ export default function Dashboard() {
             ...prev,
             page
         }))
+    }
+
+    // Handle sorting
+    const handleSort = (field: string, direction: 'asc' | 'desc') => {
+        setSortState({ field, direction });
+        
+        // Create the properly typed sort string
+        const sortString = `${field}:${direction}` as const;
+        
+        setSearchParams(prev => ({
+            ...prev,
+            sort: sortString,
+            page: 0 // Reset to first page when sort changes
+        }));
     }
 
     return (
@@ -92,9 +116,12 @@ export default function Dashboard() {
                         <DataTable 
                             data={search.data || []} 
                             totalCount={search.total}
-                            currentPage={searchParams.page}
+                            currentPage={searchParams.page || 0}
                             onPageChange={handlePageChange}
-                            pageSize={searchParams.size}
+                            pageSize={searchParams.size || 25}
+                            onSort={handleSort}
+                            sortField={sortState.field || undefined}
+                            sortDirection={sortState.direction}
                         />
                     )}
                     {likedDogs.length > 0 && (

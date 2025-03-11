@@ -34,7 +34,7 @@ interface SearchParams {
     size?: number
     from?: number
     page?: number
-    sort?: `${'breeds' | 'zipCodes' | 'ageMin' | 'ageMax' | 'size'}:${'asc' | 'desc'}`
+    sort?: `${'breeds' | 'zipCodes' | 'ageMin' | 'ageMax' | 'size' | 'age' | 'name' | 'breed'}:${'asc' | 'desc'}`
 }
 
 interface SearchResult {

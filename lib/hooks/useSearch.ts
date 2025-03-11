@@ -35,6 +35,7 @@ function buildSearchUrl(params?: SearchParams): string {
     searchParams.set('from', params.from.toString());
   }
   
+  // Handle sorting parameter
   if (params.sort) {
     searchParams.set('sort', params.sort);
   }
@@ -47,6 +48,8 @@ function buildSearchUrl(params?: SearchParams): string {
 interface SearchResponse {
   resultIds: string[];
   total: number;
+  next?: string;
+  prev?: string;
   dogs: Dog[];
 }
 
@@ -62,6 +65,8 @@ export function useSearch(params?: SearchParams) {
     search: {
       data: data?.dogs || [],
       total: data?.total || 0,
+      next: data?.next,
+      prev: data?.prev,
       error,
       isLoading,
     },
