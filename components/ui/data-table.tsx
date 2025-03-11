@@ -19,6 +19,10 @@ import type { Dog } from "@/lib/types"
 interface DataTableProps {
   data: Dog[]
   onLike?: (dogId: string) => void
+  totalCount?: number
+  currentPage: number
+  onPageChange: (page: number) => void
+  pageSize: number
 }
 
 function DogImage({ src, name }: { src: string; name: string }) {
@@ -55,7 +59,14 @@ function DogImage({ src, name }: { src: string; name: string }) {
   )
 }
 
-export function DataTable({ data, onLike }: DataTableProps) {
+export function DataTable({ 
+  data, 
+  onLike, 
+  totalCount = 0,
+  currentPage = 0,
+  onPageChange,
+  pageSize = 25
+}: DataTableProps) {
   const { likedDogs, addLikedDog, removeLikedDog } = useStore()
 
   const handleLike = React.useCallback((dogId: string) => {
@@ -71,6 +82,11 @@ export function DataTable({ data, onLike }: DataTableProps) {
       onLike(dogId)
     }
   }, [likedDogs, addLikedDog, removeLikedDog, onLike])
+
+  // Calculate total pages
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
+  const canGoNext = currentPage < totalPages - 1;
+  const canGoPrevious = currentPage > 0;
 
   return (
     <div className="w-full">
@@ -123,6 +139,37 @@ export function DataTable({ data, onLike }: DataTableProps) {
             )}
           </TableBody>
         </Table>
+      </div>
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <div className="text-text flex-1 text-sm font-publicSans">
+          {data.length > 0 ? (
+            <>
+              Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, totalCount)} of {totalCount} dogs
+            </>
+          ) : (
+            "No dogs found"
+          )}
+        </div>
+        <div className="space-x-2">
+          <Button
+            variant="noShadow"
+            size="sm"
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={!canGoPrevious}
+            className="font-publicSans"
+          >
+            Previous
+          </Button>
+          <Button
+            variant="noShadow"
+            size="sm"
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={!canGoNext}
+            className="font-publicSans"
+          >
+            Next
+          </Button>
+        </div>
       </div>
     </div>
   )

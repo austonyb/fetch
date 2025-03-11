@@ -4,26 +4,27 @@ import { useState } from 'react'
 import Logout from '@/components/logout'
 import { Combobox } from '@/components/ui/combobox'
 import { useBreeds } from '@/lib/hooks/useBreeds'
-import { useDog } from '@/lib/hooks/useDog'
 import { useSearch } from '@/lib/hooks/useSearch'
 import { DataTable } from '@/components/ui/data-table'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { Dog } from '@/types'
+import useStore from '@/lib/hooks/useStore';
 
 export default function Dashboard() {
     const [selectedBreed, setSelectedBreed] = useState<string>('')
-    const [selectedDogs, setSelectedDogs] = useState<Dog[]>([])
-    const [likedDogIds, setLikedDogIds] = useState<string[]>([])
     const [searchParams, setSearchParams] = useState<{
         breeds: string[] | undefined,
-        size: number
+        size: number,
+        page: number
     }>({
         breeds: undefined,
-        size: 25 // Show 25 dogs per page by default
+        size: 25, // Show 25 dogs per page by default
+        page: 0
     })
     
     const { breeds } = useBreeds()
-    const { search, mutateSearch } = useSearch(searchParams)
+    const { search } = useSearch(searchParams)
+
+    const { likedDogs } = useStore()
 
     const handleBreedSelect = (breeds: string[]) => {
         // Take the last selected breed, or empty string if none selected
@@ -33,19 +34,20 @@ export default function Dashboard() {
         setSelectedBreed(selectedBreed)
         
         // Update search parameters to trigger a new search
+        // Reset to page 0 when breed changes
         setSearchParams(prev => ({
             ...prev,
-            breeds: selectedBreed ? [selectedBreed] : undefined
+            breeds: selectedBreed ? [selectedBreed] : undefined,
+            page: 0
         }))
     }
 
-    const handleLikeDog = (dogId: string) => {
-        setLikedDogIds(prev => {
-            // If already liked, remove it, otherwise add it
-            return prev.includes(dogId) 
-                ? prev.filter(id => id !== dogId) 
-                : [...prev, dogId]
-        })
+    // Handle page change
+    const handlePageChange = (page: number) => {
+        setSearchParams(prev => ({
+            ...prev,
+            page
+        }))
     }
 
     return (
@@ -88,13 +90,16 @@ export default function Dashboard() {
                         </div>
                     ) : (
                         <DataTable 
-                            data={search.data} 
-                            onLike={handleLikeDog}
+                            data={search.data || []} 
+                            totalCount={search.total}
+                            currentPage={searchParams.page}
+                            onPageChange={handlePageChange}
+                            pageSize={searchParams.size}
                         />
                     )}
-                    {likedDogIds.length > 0 && (
+                    {likedDogs.length > 0 && (
                         <div className="mt-4 text-right font-publicSans text-sm text-text">
-                            {likedDogIds.length} dog{likedDogIds.length === 1 ? '' : 's'} liked
+                            {likedDogs.length} dog{likedDogs.length === 1 ? '' : 's'} liked
                         </div>
                     )}
                 </div>

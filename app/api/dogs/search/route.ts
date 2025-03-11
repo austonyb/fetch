@@ -51,10 +51,17 @@ export async function GET(request: NextRequest) {
       }
 
       const dogs = await dogsResponse.json();
-      return NextResponse.json(dogs, { status: 200 });
+      
+      return NextResponse.json({
+        ...searchResult,
+        dogs
+      }, { status: 200 });
     }
 
-    return NextResponse.json([], { status: 200 });
+    return NextResponse.json({
+      ...searchResult,
+      dogs: []
+    }, { status: 200 });
   } catch (error) {
     console.error('Search proxy error:', error);
     return NextResponse.json(

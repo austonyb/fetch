@@ -27,7 +27,11 @@ function buildSearchUrl(params?: SearchParams): string {
     searchParams.set('size', params.size.toString());
   }
   
-  if (params.from !== undefined) {
+  // Add page parameter as 'from'
+  if (params.page !== undefined && params.size !== undefined) {
+    const from = params.page * params.size;
+    searchParams.set('from', from.toString());
+  } else if (params.from !== undefined) {
     searchParams.set('from', params.from.toString());
   }
   
@@ -39,17 +43,25 @@ function buildSearchUrl(params?: SearchParams): string {
   return queryString ? `/api/dogs/search?${queryString}` : '/api/dogs/search';
 }
 
+// Update the response interface to include total count
+interface SearchResponse {
+  resultIds: string[];
+  total: number;
+  dogs: Dog[];
+}
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function useSearch(params?: SearchParams) {
-  const { data, error, isLoading, mutate } = useSWR<Dog[]>(
+  const { data, error, isLoading, mutate } = useSWR<SearchResponse>(
     buildSearchUrl(params),
     fetcher
   );
 
   return {
     search: {
-      data: data || [],
+      data: data?.dogs || [],
+      total: data?.total || 0,
       error,
       isLoading,
     },
