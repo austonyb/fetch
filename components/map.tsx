@@ -65,10 +65,15 @@ interface GeocodingResult {
 }
 
 // This function calls our geocoding API to convert a zip code to coordinates
-const getCoordinatesFromZipCode = async (zipCode: string): Promise<[number, number] | null> => {
+async function getCoordinatesFromZipCode(zipCode: string): Promise<[number, number] | null> {
   try {
-    // Call our Next.js API route that proxies to the geocoding service
     const response = await fetch(`/api/locations/geocode?address=${zipCode}`);
+    
+    if (!response.ok) {
+      console.error(`Error fetching coordinates: ${response.status}`);
+      return null;
+    }
+    
     const data = await response.json() as GeocodingResult[];
     
     // Check if we got valid results back

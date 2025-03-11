@@ -26,6 +26,28 @@ interface Location {
     county: string
 }
 
+interface LocationSearchParams {
+    city?: string
+    states?: string[]
+    geoBoundingBox?: {
+        top?: number
+        left?: number
+        bottom?: number
+        right?: number
+        bottom_left?: Coordinates
+        top_right?: Coordinates
+        bottom_right?: Coordinates
+        top_left?: Coordinates
+    }
+    size?: number
+    from?: number
+}
+
+interface LocationSearchResult {
+    results: Location[]
+    total: number
+}
+
 interface SearchParams {
     breeds?: string[]
     zipCodes?: string[]

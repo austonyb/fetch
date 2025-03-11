@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// My browser of choice doesn't support cross-site cookies. Thus the need for all of these proxy shenanigans
+// API to fetch location information for up to 100 ZIP codes
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,30 +13,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const locationsUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/locations`;
-
-    const body = await request.json();
+    // Parse the body to get the array of zip codes
+    const zipCodes = await request.json() as string[];
     
-    if (Object.keys(body).length >= 100) {
+    // Check if the request is within limits
+    if (!Array.isArray(zipCodes) || zipCodes.length > 100) {
       return NextResponse.json(
-        { error: 'Too many zip codes' },
+        { error: 'Invalid request: must provide array of up to 100 zip codes' },
         { status: 400 }
       );
     }
     
-    const response = await fetch(locationsUrl, {
+    const locationsUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/locations`;
+    
+    // Using type assertion to handle the duplex option
+    const fetchOptions = {
       method: 'POST',
       headers: {
         'Cookie': `fetch-access-token=${cookie.value}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(body)
-    });
+      body: JSON.stringify(zipCodes),
+      duplex: 'half' // Required for requests with a body in newer fetch implementations
+    } as RequestInit;
+    
+    const response = await fetch(locationsUrl, fetchOptions);
+    
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: `Failed to fetch locations with status ${response.status}` },
+        { status: response.status }
+      );
+    }
 
     const data = await response.json();
 
-    // returns an array of location objs
-    return NextResponse.json(data, { status: response.status });
+    // Returns an array of location objects
+    return NextResponse.json(data, { status: 200 });
   } catch (error) {
     console.error('Location proxy error:', error);
     return NextResponse.json(
