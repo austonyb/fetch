@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { MapContainer, TileLayer, Rectangle, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -52,55 +52,74 @@ function ViewportBoundsHandler({ onBoundsChange }: { onBoundsChange: (bounds: Bo
   const map = useMap();
   const [bounds, setBounds] = useState<L.LatLngBounds | null>(null);
   const initialBoundsSetRef = useRef(false);
+  const lastBoundsRef = useRef<BoundingBox | null>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Function to handle viewport changes and notify parent
+  const handleViewportChange = useCallback(() => {
+    const currentBounds = map.getBounds();
+    setBounds(currentBounds);
+    
+    // Convert Leaflet bounds to our bounding box format
+    const boundingBox: BoundingBox = {
+      top_left: {
+        lat: currentBounds.getNorth(),
+        lon: currentBounds.getWest()
+      },
+      bottom_right: {
+        lat: currentBounds.getSouth(),
+        lon: currentBounds.getEast()
+      }
+    };
+    
+    // Check if the change is significant enough to trigger a new search
+    const lastBounds = lastBoundsRef.current;
+    const isSignificantChange = !lastBounds || 
+      Math.abs(boundingBox.top_left.lat - lastBounds.top_left.lat) > 0.1 ||
+      Math.abs(boundingBox.top_left.lon - lastBounds.top_left.lon) > 0.1 ||
+      Math.abs(boundingBox.bottom_right.lat - lastBounds.bottom_right.lat) > 0.1 ||
+      Math.abs(boundingBox.bottom_right.lon - lastBounds.bottom_right.lon) > 0.1;
+    
+    // Only trigger a new search if the change is significant
+    if (isSignificantChange) {
+      console.log('Significant map change detected, updating search');
+      lastBoundsRef.current = boundingBox;
+      onBoundsChange(boundingBox);
+    }
+  }, [map, onBoundsChange]);
+  
+  // Debounced handler for events
+  const debouncedHandleViewportChange = useCallback(() => {
+    // Clear any existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    // Set a new timer
+    debounceTimerRef.current = setTimeout(() => {
+      handleViewportChange();
+    }, 300); // 300ms debounce
+  }, [handleViewportChange]);
   
   // Update bounds when the map view changes (zoom, pan, etc.)
   useMapEvents({
-    moveend: () => {
-      const currentBounds = map.getBounds();
-      setBounds(currentBounds);
-      
-      // Convert Leaflet bounds to our bounding box format
-      const boundingBox: BoundingBox = {
-        top_left: {
-          lat: currentBounds.getNorth(),
-          lon: currentBounds.getWest()
-        },
-        bottom_right: {
-          lat: currentBounds.getSouth(),
-          lon: currentBounds.getEast()
-        }
-      };
-      
-      // Notify parent component about the change
-      onBoundsChange(boundingBox);
-    }
+    moveend: debouncedHandleViewportChange,
+    zoomend: debouncedHandleViewportChange
   });
   
   useEffect(() => {
     if (map && !initialBoundsSetRef.current) {
       initialBoundsSetRef.current = true;
-      
-      const initialBounds = map.getBounds();
-      setBounds(initialBounds);
-      
-      // Convert Leaflet bounds to our bounding box format
-      const boundingBox: BoundingBox = {
-        top_left: {
-          lat: initialBounds.getNorth(),
-          lon: initialBounds.getWest()
-        },
-        bottom_right: {
-          lat: initialBounds.getSouth(),
-          lon: initialBounds.getEast()
-        }
-      };
-
-      console.log(boundingBox)
-      
-      // Notify parent component about the initial bounds
-      onBoundsChange(boundingBox);
+      handleViewportChange();
     }
-  }, [map, onBoundsChange]);
+    
+    return () => {
+      // Clean up any pending debounce timer
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [map, handleViewportChange]);
   
   return bounds ? (
     <Rectangle 
