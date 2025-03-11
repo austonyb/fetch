@@ -135,7 +135,7 @@ export function Combobox({
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[300px] p-0 border-2 border-border bg-bw">
+      <PopoverContent className="w-[300px] p-0 border-2 border-border bg-bw z-50">
         <Command 
           className="rounded-base border-0"
           onKeyDown={handleKeyDown}

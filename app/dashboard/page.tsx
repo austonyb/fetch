@@ -1,9 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react'
-import Image from "next/image"
 import Logout from '@/components/logout'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Combobox } from '@/components/ui/combobox'
 import { useBreeds } from '@/lib/hooks/useBreeds'
 import { useSearch } from '@/lib/hooks/useSearch'
@@ -69,7 +67,7 @@ export default function Dashboard() {
     const { breeds } = useBreeds()
     const { search } = useSearch(searchParams)
 
-    const { likedDogs } = useStore()
+    const { likedDogs, emptyLikedDogs } = useStore()
     const { match, isLoading: isMatchLoading, findMatch } = useMatch(likedDogs)
 
     // Use the matched dog ID to fetch the full dog details
@@ -118,10 +116,6 @@ export default function Dashboard() {
 
     const toggleLocationMap = () => {
         setShowLocationMap(!showLocationMap);
-        if (!showLocationMap === false && locationFilter) {
-            // Clear the location filter when hiding the map
-            handleLocationSelect(null);
-        }
     }
 
     const handlePageChange = (page: number) => {
@@ -178,11 +172,17 @@ export default function Dashboard() {
                                 </CardHeader>
                                 <CardContent className="space-y-2">
                                     <div className="mx-auto mb-4">
-                                        <Combobox
-                                            breeds={breeds}
-                                            onSelect={handleBreedSelect}
-                                            value={selectedBreed ? [selectedBreed] : []}
-                                        />
+                                        <div className="mb-6">
+                                            <div className="flex flex-wrap items-center gap-3 mb-3 relative">
+                                                <div className="w-[220px] relative" style={{ zIndex: 9999 }}>
+                                                    <Combobox
+                                                        breeds={breeds}
+                                                        onSelect={handleBreedSelect}
+                                                        value={selectedBreed ? [selectedBreed] : []}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                     
                                     <div className="mb-4">
@@ -219,11 +219,6 @@ export default function Dashboard() {
                                                         mapStyle="light"
                                                     />
                                                 </div>
-                                                {locationFilter && (
-                                                    <div className="mt-2 text-sm font-publicSans text-green-600">
-                                                        <p>Location filter active - showing dogs in the visible map area</p>
-                                                    </div>
-                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -331,13 +326,20 @@ export default function Dashboard() {
                                         </div>
                                     )}
                                 </CardContent>
-                                <CardFooter>
+                                <CardFooter className='flex flex-col gap-2'>
                                     <Button
                                         className="w-full bg-bw text-text font-publicSans"
                                         onClick={handleFindMatch}
                                         disabled={isLoading || likedDogs.length === 0}
                                     >
                                         {isLoading ? 'Finding your match...' : 'Find your perfect match'}
+                                    </Button>
+                                    <Button
+                                        className="w-full font-publicSans"
+                                        onClick={emptyLikedDogs}
+                                        variant="destructive"
+                                    >
+                                        Clear liked dogs
                                     </Button>
                                 </CardFooter>
                             </Card>

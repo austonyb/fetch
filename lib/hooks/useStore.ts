@@ -7,6 +7,7 @@ interface StoreState {
     addLikedDog: (dogId: string) => void
     removeLikedDog: (dogId: string) => void
     updateLikedDogs: (newDogs: string[]) => void
+    emptyLikedDogs: () => void
 }
 
 const useStore = create<StoreState>()(
@@ -20,6 +21,7 @@ const useStore = create<StoreState>()(
                 likedDogs: state.likedDogs.filter(id => id !== dogId)
             })),
             updateLikedDogs: (newDogs: string[]) => set({ likedDogs: newDogs }),
+            emptyLikedDogs: () => set({ likedDogs: [] })
         }),
         {
             name: 'likedDogs',

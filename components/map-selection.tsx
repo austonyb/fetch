@@ -82,7 +82,6 @@ function ViewportBoundsHandler({ onBoundsChange }: { onBoundsChange: (bounds: Bo
     
     // Only trigger a new search if the change is significant
     if (isSignificantChange) {
-      console.log('Significant map change detected, updating search');
       lastBoundsRef.current = boundingBox;
       onBoundsChange(boundingBox);
     }
@@ -170,6 +169,7 @@ export default function MapSelection({
         style={{ height: '100%', width: '100%' }}
         attributionControl={false}
         zoomControl={true}
+        className="z-0" // Ensure map has a low z-index
       >
         <TileLayer
           attribution={mapStyles[mapStyle].attribution}
