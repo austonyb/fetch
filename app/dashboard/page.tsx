@@ -25,6 +25,8 @@ import { useDog } from '@/lib/hooks/useDog'
 import { useWindowSize } from 'react-use'
 import Confetti from 'react-confetti';
 import Map from '@/components/map';
+import MapSelection from '@/components/map-selection';
+import { Coordinates } from '@/lib/types';
 
 export default function Dashboard() {
     const { width, height } = useWindowSize()
@@ -34,11 +36,16 @@ export default function Dashboard() {
         breeds: string[] | undefined,
         size: number,
         page: number,
-        sort: any
+        sort: any,
+        geoBoundingBox: {
+            top_left: Coordinates,
+            bottom_right: Coordinates
+        } | null
     }>>({
         breeds: undefined,
         size: 25,
-        page: 0
+        page: 0,
+        geoBoundingBox: null
     })
 
     const [sortState, setSortState] = useState<{
@@ -53,6 +60,11 @@ export default function Dashboard() {
     const [matchError, setMatchError] = useState<string | null>(null);
     const [imageLoading, setImageLoading] = useState(true);
     const [imageError, setImageError] = useState(false);
+    const [showLocationMap, setShowLocationMap] = useState(false);
+    const [locationFilter, setLocationFilter] = useState<{
+        top_left: Coordinates,
+        bottom_right: Coordinates
+    } | null>(null);
 
     const { breeds } = useBreeds()
     const { search } = useSearch(searchParams)
@@ -92,6 +104,24 @@ export default function Dashboard() {
             breeds: selectedBreed ? [selectedBreed] : undefined,
             page: 0
         }))
+    }
+
+    const handleLocationSelect = (boundingBox: { top_left: Coordinates, bottom_right: Coordinates } | null) => {
+        setLocationFilter(boundingBox);
+
+        setSearchParams(prev => ({
+            ...prev,
+            geoBoundingBox: boundingBox,
+            page: 0
+        }));
+    }
+
+    const toggleLocationMap = () => {
+        setShowLocationMap(!showLocationMap);
+        if (!showLocationMap === false && locationFilter) {
+            // Clear the location filter when hiding the map
+            handleLocationSelect(null);
+        }
     }
 
     const handlePageChange = (page: number) => {
@@ -147,35 +177,79 @@ export default function Dashboard() {
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-2">
-                                    <div className="mx-auto mb-8">
+                                    <div className="mx-auto mb-4">
                                         <Combobox
                                             breeds={breeds}
                                             onSelect={handleBreedSelect}
                                             value={selectedBreed ? [selectedBreed] : []}
                                         />
                                     </div>
+                                    
+                                    <div className="mb-4">
+                                        <div className="flex items-center justify-between">
+                                            <Button 
+                                                onClick={toggleLocationMap} 
+                                                variant={showLocationMap ? "default" : "neutral"}
+                                                className="flex items-center gap-2 font-publicSans"
+                                            >
+                                                {showLocationMap ? "Hide Location Filter" : "Filter by Location"}
+                                                {locationFilter && <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">Active</span>}
+                                            </Button>
+                                            
+                                            {locationFilter && (
+                                                <Button 
+                                                    variant="neutral" 
+                                                    onClick={() => handleLocationSelect(null)}
+                                                    className="text-sm font-publicSans text-gray-500"
+                                                >
+                                                    Clear Location
+                                                </Button>
+                                            )}
+                                        </div>
+                                        
+                                        {showLocationMap && (
+                                            <div className="mt-4">
+                                                <div className="mb-2 text-sm font-publicSans text-gray-600">
+                                                    <p>Navigate the map to focus on your desired area. Dogs from locations within the current map view will be displayed in the results.</p>
+                                                </div>
+                                                <div className="border rounded overflow-hidden">
+                                                    <MapSelection 
+                                                        onBoundsChange={handleLocationSelect}
+                                                        height="300px"
+                                                        mapStyle="light"
+                                                    />
+                                                </div>
+                                                {locationFilter && (
+                                                    <div className="mt-2 text-sm font-publicSans text-green-600">
+                                                        <p>Location filter active - showing dogs in the visible map area</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
 
                                     <div className="rounded-base border-2 border-border bg-main p-6">
                                         {search.isLoading ? (
-                                            <div className="space-y-4">
-                                                <div className="h-8 w-full flex items-center gap-4">
-                                                    <Skeleton className="h-6 w-16" />
-                                                    <Skeleton className="h-6 w-24" />
-                                                    <Skeleton className="h-6 w-20" />
-                                                    <Skeleton className="h-6 w-12" />
-                                                    <Skeleton className="h-6 w-24" />
-                                                    <Skeleton className="h-6 w-8" />
-                                                </div>
-                                                {[...Array(5)].map((_, index) => (
-                                                    <div key={index} className="h-16 w-full flex items-center gap-4">
-                                                        <Skeleton className="h-12 w-12 rounded-base" />
-                                                        <Skeleton className="h-5 w-32" />
-                                                        <Skeleton className="h-5 w-48" />
-                                                        <Skeleton className="h-5 w-8" />
-                                                        <Skeleton className="h-5 w-16" />
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                {Array.from({ length: 6 }).map((_, index) => (
+                                                    <div key={index} className="flex items-center p-4 space-x-3 border rounded">
+                                                        <Skeleton className="h-12 w-12 rounded-full" />
+                                                        <div className="flex-1 space-y-3">
+                                                            <Skeleton className="h-3 w-3/4" />
+                                                            <Skeleton className="h-2 w-1/3" />
+                                                        </div>
                                                         <Skeleton className="h-8 w-8 rounded-full" />
                                                     </div>
                                                 ))}
+                                            </div>
+                                        ) : search.data.length === 0 ? (
+                                            <div className="text-center py-6 font-publicSans">
+                                                <p className="text-lg text-gray-500 mb-2">No dogs found</p>
+                                                <p className="text-sm text-gray-400">
+                                                    {locationFilter 
+                                                        ? "Try selecting a different region on the map, or clear the location filter" 
+                                                        : "Try selecting a different breed"}
+                                                </p>
                                             </div>
                                         ) : (
                                             <DataTable

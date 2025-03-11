@@ -57,6 +57,10 @@ interface SearchParams {
     from?: number
     page?: number
     sort?: `${'breeds' | 'zipCodes' | 'ageMin' | 'ageMax' | 'size' | 'age' | 'name' | 'breed'}:${'asc' | 'desc'}`
+    geoBoundingBox?: {
+        top_left: Coordinates,
+        bottom_right: Coordinates
+    } | null
 }
 
 interface SearchResult {
