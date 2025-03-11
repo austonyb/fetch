@@ -238,7 +238,7 @@ export function DataTable({
                   </div>
                   
                   <DialogFooter>
-                    <Button type="button" className="font-publicSans">Adopt {dog.name}</Button>
+                    {dog.age < 5 ? 'What a cute pupper!' : 'Nice dog!'}
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
