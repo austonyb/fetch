@@ -229,7 +229,7 @@ export function DataTable({
                               <MapPin className="h-4 w-4 mr-1" /> {dog.zip_code}
                             </p>
                             <div className="h-[200px] rounded-md overflow-hidden border border-gray-200">
-                              <Map zipCode={dog.zip_code} dogName={dog.name} />
+                              <Map zipCode={dog.zip_code} />
                             </div>
                           </div>
                         </div>

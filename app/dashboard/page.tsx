@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react'
+import Image from "next/image"
 import Logout from '@/components/logout'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Combobox } from '@/components/ui/combobox'
 import { useBreeds } from '@/lib/hooks/useBreeds'
 import { useSearch } from '@/lib/hooks/useSearch'
@@ -21,7 +23,8 @@ import useStore from '@/lib/hooks/useStore';
 import { useMatch } from '@/lib/hooks/useMatch'
 import { useDog } from '@/lib/hooks/useDog'
 import { useWindowSize } from 'react-use'
-import Confetti from 'react-confetti'
+import Confetti from 'react-confetti';
+import Map from '@/components/map';
 
 export default function Dashboard() {
     const { width, height } = useWindowSize()
@@ -48,16 +51,18 @@ export default function Dashboard() {
 
     const [showConfetti, setShowConfetti] = useState(false)
     const [matchError, setMatchError] = useState<string | null>(null);
+    const [imageLoading, setImageLoading] = useState(true);
+    const [imageError, setImageError] = useState(false);
 
     const { breeds } = useBreeds()
     const { search } = useSearch(searchParams)
 
     const { likedDogs } = useStore()
     const { match, isLoading: isMatchLoading, findMatch } = useMatch(likedDogs)
-    
+
     // Use the matched dog ID to fetch the full dog details
     const { dog: matchedDog, isLoading: isDogLoading } = useDog(match || "");
-    
+
     // Combined loading state
     const isLoading = isMatchLoading || (match && isDogLoading);
 
@@ -66,6 +71,7 @@ export default function Dashboard() {
         if (matchedDog && !isLoading) {
             setShowConfetti(true);
             setMatchError(null);
+            setImageError(false); // Reset image error state when new match is found
         } else if (match && !matchedDog && !isDogLoading) {
             // If we have a match ID but no dog data, it means there was an error fetching the dog
             setMatchError("Couldn't load the details of your matched dog.");
@@ -109,13 +115,13 @@ export default function Dashboard() {
 
     const handleFindMatch = () => {
         setMatchError(null);
-        
+
         // Don't attempt to find a match if no dogs are liked
         if (likedDogs.length === 0) {
             setMatchError("Please like some dogs first!");
             return;
         }
-        
+
         findMatch();
     }
 
@@ -218,11 +224,36 @@ export default function Dashboard() {
                                     )}
 
                                     {matchedDog && (
-                                        <div className="mt-4 p-4 border rounded font-publicSans">
+                                        <div className="mt-4">
                                             <h3 className="font-bold text-lg mb-2">Your Match: {matchedDog.name}</h3>
-                                            <p>Breed: {matchedDog.breed}</p>
-                                            <p>Age: {matchedDog.age} years</p>
-                                            <p>Location: {matchedDog.zip_code}</p>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded font-publicSans">
+                                                <div className="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center h-full min-h-[300px]">
+                                                    {!imageError ? (
+                                                        <img 
+                                                            src={matchedDog.img} 
+                                                            alt={`Photo of ${matchedDog.name}`}
+                                                            className="max-w-full max-h-full object-contain p-2"
+                                                            onError={() => setImageError(true)}
+                                                        />
+                                                    ) : (
+                                                        <div className="font-publicSans text-2xl font-semibold">
+                                                            {matchedDog.name[0]}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <div className="mb-4">
+                                                        <p className="py-1"><span className="font-semibold">Breed:</span> {matchedDog.breed}</p>
+                                                        <p className="py-1"><span className="font-semibold">Age:</span> {matchedDog.age} years</p>
+                                                        <p className="py-1"><span className="font-semibold">Zip Code:</span> {matchedDog.zip_code}</p>
+                                                    </div>
+                                                    {matchedDog.zip_code && (
+                                                        <div className="h-[200px] mt-2 rounded-md overflow-hidden border border-gray-200 flex-grow">
+                                                            <Map zipCode={matchedDog.zip_code} dogName={matchedDog.name} />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
                                 </CardContent>
