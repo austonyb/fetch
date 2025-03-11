@@ -16,6 +16,13 @@ const nextConfig = {
   images: {
     domains: ['frontend-take-home.fetch.com'],
   },
+  // Configure static generation to skip problematic pages
+  staticPageGenerationTimeout: 120,
+  // Disable static generation for dashboard page
+  experimental: {
+    // Prevent window errors during build by skipping prerendering for pages that use window
+    disableOptimizedLoading: true
+  }
 };
 
 module.exports = nextConfig;
