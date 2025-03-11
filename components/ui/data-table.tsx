@@ -80,7 +80,7 @@ export function DataTable({ data, onLike }: DataTableProps) {
               <TableHead className="text-mtext font-publicSans">Name</TableHead>
               <TableHead className="text-mtext font-publicSans">Breed</TableHead>
               <TableHead className="text-mtext font-publicSans">Age</TableHead>
-              <TableHead className="text-mtext font-publicSans">Location</TableHead>
+              <TableHead className="text-mtext font-publicSans">Location {`(Zip Code)`}</TableHead>
               <TableHead className="text-mtext font-publicSans w-[50px]">Like</TableHead>
             </TableRow>
           </TableHeader>

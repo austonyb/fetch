@@ -13,15 +13,29 @@ export default function Dashboard() {
     const [selectedBreed, setSelectedBreed] = useState<string>('')
     const [selectedDogs, setSelectedDogs] = useState<Dog[]>([])
     const [likedDogIds, setLikedDogIds] = useState<string[]>([])
-    const { breeds } = useBreeds()
-    const { search } = useSearch({
-        breeds: selectedBreed ? [selectedBreed] : undefined,
+    const [searchParams, setSearchParams] = useState<{
+        breeds: string[] | undefined,
+        size: number
+    }>({
+        breeds: undefined,
         size: 25 // Show 25 dogs per page by default
     })
+    
+    const { breeds } = useBreeds()
+    const { search, mutateSearch } = useSearch(searchParams)
 
     const handleBreedSelect = (breeds: string[]) => {
         // Take the last selected breed, or empty string if none selected
-        setSelectedBreed(breeds[breeds.length - 1] || '')
+        const selectedBreed = breeds[breeds.length - 1] || ''
+        
+        // Update the selected breed state
+        setSelectedBreed(selectedBreed)
+        
+        // Update search parameters to trigger a new search
+        setSearchParams(prev => ({
+            ...prev,
+            breeds: selectedBreed ? [selectedBreed] : undefined
+        }))
     }
 
     const handleLikeDog = (dogId: string) => {
@@ -37,7 +51,7 @@ export default function Dashboard() {
         <main className="min-h-screen p-8 bg-bw">
             <div className="container mx-auto">
                 <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-4xl font-bold font-publicSans text-text">Dashboard</h1>
+                    <h1 className="text-4xl font-bold font-publicSans text-text">Dog Adoption</h1>
                     <Logout />
                 </div>
                 
@@ -47,11 +61,11 @@ export default function Dashboard() {
                         onSelect={handleBreedSelect}
                         value={selectedBreed ? [selectedBreed] : []}
                     />
-                    {selectedBreed && (
+                    {/* {selectedBreed && (
                         <p className="mt-4 text-center font-publicSans text-sm text-text">
                             Selected breed: {breeds.find(b => b.value === selectedBreed)?.label || selectedBreed}
                         </p>
-                    )}
+                    )} */}
                 </div>
 
                 <div className="rounded-base border-2 border-border bg-main p-6">

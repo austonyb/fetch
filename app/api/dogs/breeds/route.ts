@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const sortedData = new Set<string>(data);
     
     const breeds = Array.from(sortedData).map((breed) => ({
-      value: breed.toLowerCase(),
+      value: breed,
       label: breed
     }));
 
