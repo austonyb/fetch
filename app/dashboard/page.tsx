@@ -249,7 +249,7 @@ export default function Dashboard() {
                                                     </div>
                                                     {matchedDog.zip_code && (
                                                         <div className="h-[200px] mt-2 rounded-md overflow-hidden border border-gray-200 flex-grow">
-                                                            <Map zipCode={matchedDog.zip_code} dogName={matchedDog.name} />
+                                                            <Map zipCode={matchedDog.zip_code} dogName={matchedDog.name} mapStyle="light" />
                                                         </div>
                                                     )}
                                                 </div>

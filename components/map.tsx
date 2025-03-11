@@ -16,12 +16,39 @@ const fixLeafletIcon = () => {
   })
 }
 
+// Custom purple marker to match the app's theme
+const purpleIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+// Map style options
+const mapStyles = {
+  light: {
+    url: "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://stamen.com">Stamen Design</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  },
+  dark: {
+    url: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://stamen.com">Stamen Design</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  },
+  pastel: {
+    url: "https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://stamen.com">Stamen Design</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  }
+};
+
 interface MapProps {
   zipCode: string
   dogName?: string
   height?: string
   width?: string
   className?: string
+  mapStyle?: 'light' | 'dark' | 'pastel'
 }
 
 // Response type from the geocoding API
@@ -72,7 +99,8 @@ export default function Map({
   dogName = "Dog Location",
   height = "100%", 
   width = "100%",
-  className = ""
+  className = "",
+  mapStyle = "pastel" // default to pastel style
 }: MapProps) {
   // State to track if we're on the client side
   const [isMounted, setIsMounted] = useState(false)
@@ -144,10 +172,10 @@ export default function Map({
         attributionControl={false}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution={mapStyles[mapStyle].attribution}
+          url={mapStyles[mapStyle].url}
         />
-        <Marker position={coordinates}>
+        <Marker position={coordinates} icon={purpleIcon}>
           <Popup>
             <div className="font-publicSans text-sm">
               <span className="font-bold">{dogName}</span>
