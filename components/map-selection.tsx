@@ -46,7 +46,7 @@ const mapStyles = {
   }
 };
 
-// This component updates the search bounds when the map viewport changes
+
 function ViewportBoundsHandler({ onBoundsChange }: { onBoundsChange: (bounds: BoundingBox | null) => void }) {
   const map = useMap();
   const [bounds, setBounds] = useState<LatLngBounds | null>(null);
@@ -54,12 +54,12 @@ function ViewportBoundsHandler({ onBoundsChange }: { onBoundsChange: (bounds: Bo
   const lastBoundsRef = useRef<BoundingBox | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Function to handle viewport changes and notify parent
+  
   const handleViewportChange = useCallback(() => {
     const currentBounds = map.getBounds();
     setBounds(currentBounds);
     
-    // Convert Leaflet bounds to our bounding box format
+    
     const boundingBox: BoundingBox = {
       top_left: {
         lat: currentBounds.getNorth(),
@@ -71,7 +71,7 @@ function ViewportBoundsHandler({ onBoundsChange }: { onBoundsChange: (bounds: Bo
       }
     };
     
-    // Check if the change is significant enough to trigger a new search
+    
     const lastBounds = lastBoundsRef.current;
     const isSignificantChange = !lastBounds || 
       Math.abs(boundingBox.top_left.lat - lastBounds.top_left.lat) > 0.1 ||
@@ -79,27 +79,27 @@ function ViewportBoundsHandler({ onBoundsChange }: { onBoundsChange: (bounds: Bo
       Math.abs(boundingBox.bottom_right.lat - lastBounds.bottom_right.lat) > 0.1 ||
       Math.abs(boundingBox.bottom_right.lon - lastBounds.bottom_right.lon) > 0.1;
     
-    // Only trigger a new search if the change is significant
+    
     if (isSignificantChange) {
       lastBoundsRef.current = boundingBox;
       onBoundsChange(boundingBox);
     }
   }, [map, onBoundsChange]);
   
-  // Debounced handler for events
+  
   const debouncedHandleViewportChange = useCallback(() => {
-    // Clear any existing timer
+    
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
     
-    // Set a new timer
+    
     debounceTimerRef.current = setTimeout(() => {
       handleViewportChange();
-    }, 300); // 300ms debounce
+    }, 300); 
   }, [handleViewportChange]);
   
-  // Update bounds when the map view changes (zoom, pan, etc.)
+  
   useMapEvents({
     moveend: debouncedHandleViewportChange,
     zoomend: debouncedHandleViewportChange
@@ -112,7 +112,7 @@ function ViewportBoundsHandler({ onBoundsChange }: { onBoundsChange: (bounds: Bo
     }
     
     return () => {
-      // Clean up any pending debounce timer
+      
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
@@ -127,7 +127,7 @@ function ViewportBoundsHandler({ onBoundsChange }: { onBoundsChange: (bounds: Bo
   ) : null;
 }
 
-// This component will help initialize Leaflet when the map is ready
+
 function InitializeLeaflet() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -149,19 +149,19 @@ export default function MapSelection({
 }: MapSelectionProps) {
   const [isMounted, setIsMounted] = useState(false);
   
-  // Mount check for client-side rendering
+  
   useEffect(() => {
     setIsMounted(true);
   }, []);
   
-  // Instructions for the user
+  
   const instructions = (
     <div className="absolute bottom-2 left-2 right-2 z-[1000] bg-white bg-opacity-80 p-2 rounded-md text-xs font-publicSans text-gray-800">
       <strong>Tip:</strong> The current map view determines which dogs are shown. Pan and zoom to find dogs in different areas.
     </div>
   );
 
-  // Show nothing during SSR to prevent hydration errors
+  
   if (!isMounted) {
     return <div style={{ height, width }} className={`${className} bg-gray-100`}></div>;
   }
@@ -176,7 +176,7 @@ export default function MapSelection({
         style={{ height: '100%', width: '100%' }}
         attributionControl={false}
         zoomControl={true}
-        className="z-0" // Ensure map has a low z-index
+        className="z-0" 
       >
         <InitializeLeaflet />
         <TileLayer

@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 
-// Import the dashboard client component with SSR disabled
+
 const DashboardClient = dynamic(
   () => import('./components/dashboard-client'),
   { 

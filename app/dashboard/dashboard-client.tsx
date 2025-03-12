@@ -23,7 +23,7 @@ import dynamic from 'next/dynamic'
 import { Coordinates } from '@/lib/types';
 import Image from "next/image"
 
-// Dynamically import components with window dependencies
+
 const Confetti = dynamic(() => import('react-confetti'), {
     ssr: false
 })
@@ -38,7 +38,7 @@ const MapSelection = dynamic(() => import('@/components/map-selection'), {
 
 export default function DashboardClient() {
     const [mounted, setMounted] = useState(false);
-    // Safely initialize window size
+    
     const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
     const [selectedBreed, setSelectedBreed] = useState<string>('')
     const [searchParams, setSearchParams] = useState<Partial<{
@@ -80,18 +80,18 @@ export default function DashboardClient() {
     const { likedDogs, emptyLikedDogs } = useStore()
     const { match, isLoading: isMatchLoading, findMatch } = useMatch(likedDogs)
 
-    // Use the matched dog ID to fetch the full dog details
+    
     const { dog: matchedDog, isLoading: isDogLoading } = useDog(match || "");
 
-    // Combined loading state
+    
     const isLoading = isMatchLoading || (match && isDogLoading);
 
-    // This effect safely captures window size on the client side only
+    
     useEffect(() => {
         if (typeof window !== 'undefined') {
             setMounted(true);
             
-            // Update window size
+            
             const updateWindowSize = () => {
                 setWindowSize({
                     width: window.innerWidth,
@@ -99,37 +99,37 @@ export default function DashboardClient() {
                 });
             };
             
-            // Set initial size
+            
             updateWindowSize();
             
-            // Add event listener
+            
             window.addEventListener('resize', updateWindowSize);
             
-            // Clean up
+            
             return () => window.removeEventListener('resize', updateWindowSize);
         }
     }, []);
 
-    // Effect to show confetti when matched dog data arrives
+    
     useEffect(() => {
         if (matchedDog && !isLoading) {
             setShowConfetti(true);
             setMatchError(null);
         } else if (match && !matchedDog && !isDogLoading) {
-            // If we have a match ID but no dog data, it means there was an error fetching the dog
+            
             setMatchError("Couldn&apos;t load the details of your matched dog.");
         }
     }, [matchedDog, isLoading, match, isDogLoading]);
 
     const handleBreedSelect = (breeds: string[]) => {
-        // Take the last selected breed, or empty string if none selected
+        
         const selectedBreed = breeds[breeds.length - 1] || ''
 
-        // Update the selected breed state
+        
         setSelectedBreed(selectedBreed)
 
-        // Update search parameters to trigger a new search
-        // Reset to page 0 when breed changes
+        
+        
         setSearchParams(prev => ({
             ...prev,
             breeds: selectedBreed ? [selectedBreed] : undefined,
@@ -161,12 +161,12 @@ export default function DashboardClient() {
     const handleSort = (field: string, direction: 'asc' | 'desc') => {
         setSortState({ field, direction });
 
-        // Ensure field is valid for sort parameter
+        
         const validFields = ['breeds', 'zipCodes', 'ageMin', 'ageMax', 'size', 'age', 'name', 'breed'] as const;
         //eslint-disable-next-line
         const validField = validFields.includes(field as any) ? field as typeof validFields[number] : 'name';
         
-        // Create properly typed sort string
+        
         const sortString = `${validField}:${direction}` as const;
 
         setSearchParams(prev => ({
@@ -179,7 +179,7 @@ export default function DashboardClient() {
     const handleFindMatch = () => {
         setMatchError(null);
 
-        // Don't attempt to find a match if no dogs are liked
+        
         if (likedDogs.length === 0) {
             setMatchError("Please like some dogs first!");
             return;
@@ -188,7 +188,7 @@ export default function DashboardClient() {
         findMatch();
     }
 
-    // Show a loading skeleton while the client-side component is mounting
+    
     if (!mounted) {
         return (
             <div className="w-full animate-pulse">
@@ -331,7 +331,7 @@ export default function DashboardClient() {
                                                     </div>
                                                     <Button 
                                                         onClick={() => {
-                                                            // Reset the match
+                                                            
                                                             emptyLikedDogs();
                                                             setShowConfetti(false);
                                                         }}

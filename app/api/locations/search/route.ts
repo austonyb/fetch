@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// API to search locations with filtering options for city, states, and geographic bounding box
+
 interface SearchParams {
   city?: string;
   states?: string[];
@@ -20,7 +20,7 @@ interface SearchParams {
 
 export async function POST(request: NextRequest) {
   try {
-    // Get the cookie from the incoming request
+    
     const cookie = request.cookies.get('fetch-access-token');
     if (!cookie) {
       return NextResponse.json(
@@ -29,10 +29,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse the search parameters from the request body
+    
     const searchParams: SearchParams = await request.json();
     
-    // Validate geoBoundingBox if provided
+    
     if (searchParams.geoBoundingBox) {
       const bbox = searchParams.geoBoundingBox;
       const hasTopLeftBottomRight = bbox.top !== undefined && bbox.left !== undefined && 
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     const locationsUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/locations/search`;
     
-    // Using type assertion to handle the duplex option
+    
     const fetchOptions = {
       method: 'POST',
       headers: {
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(searchParams),
-      duplex: 'half' // Required for requests with a body in newer fetch implementations
+      duplex: 'half' 
     } as RequestInit;
     
     const response = await fetch(locationsUrl, fetchOptions);
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
 
-    // Returns an object with: results (array of Location objects) and total (count)
+    
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
     console.error('Location search error:', error);

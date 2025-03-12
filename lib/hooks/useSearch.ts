@@ -28,7 +28,7 @@ function buildSearchUrl(params?: SearchParams): string {
     searchParams.set('size', params.size.toString());
   }
   
-  // Add page parameter as 'from'
+  
   if (params.page !== undefined && params.size !== undefined) {
     const from = params.page * params.size;
     searchParams.set('from', from.toString());
@@ -36,7 +36,7 @@ function buildSearchUrl(params?: SearchParams): string {
     searchParams.set('from', params.from.toString());
   }
   
-  // Handle sorting parameter
+  
   if (params.sort) {
     searchParams.set('sort', params.sort);
   }
@@ -45,7 +45,7 @@ function buildSearchUrl(params?: SearchParams): string {
   return queryString ? `/api/dogs/search?${queryString}` : '/api/dogs/search';
 }
 
-// Update the response interface to include total count
+
 interface SearchResponse {
   resultIds: string[];
   total: number;
@@ -69,29 +69,29 @@ export function useSearch(params?: Partial<SearchParams & {
     bottom_right: Coordinates 
   } | null 
 }>) {
-  // Extract geoBoundingBox to handle it separately
+  
   const { geoBoundingBox, ...otherParams } = params || {};
   
-  // Use useLocationSearch to get zip codes within the bounding box
+  
   const locationSearch = useLocationSearch(
     geoBoundingBox 
       ? {
           geoBoundingBox: {
-            // Use the proper format expected by the API
+            
             top: geoBoundingBox.top_left.lat,
             left: geoBoundingBox.top_left.lon,
             bottom: geoBoundingBox.bottom_right.lat,
             right: geoBoundingBox.bottom_right.lon
           },
-          size: 100 // Get up to 100 locations
+          size: 100 
         }
       : null
   );
   
-  // Extract zip codes from location search results
+  
   const locationZipCodes = locationSearch.results?.map((loc: Location) => loc.zip_code) || [];
   
-  // Combine any existing zipCodes with the ones from the bounding box search
+  
   const combinedParams = {
     ...otherParams,
     zipCodes: geoBoundingBox 
@@ -99,22 +99,22 @@ export function useSearch(params?: Partial<SearchParams & {
       : otherParams.zipCodes
   };
   
-  // Don't fetch until we have location results if using geoBoundingBox
+  
   const shouldFetch = !geoBoundingBox || !locationSearch.isLoading;
   
-  // Use SWR to fetch search results
+  
   const { data, error, isLoading, mutate } = useSWR<SearchResponse>(
     shouldFetch ? buildSearchUrl(combinedParams as SearchParams) : null,
     shouldFetch ? fetcher : null
   );
   
-  // Now fetch the dog details if we have result IDs
+  
   const { data: dogData, error: dogError, isLoading: isDogLoading } = useSWR<Dog[]>(
     data?.resultIds && data.resultIds.length > 0 ? ['/api/dogs', data.resultIds] : null,
     data?.resultIds && data.resultIds.length > 0 ? () => postFetcher('/api/dogs', data.resultIds) : null
   );
   
-  // Determine overall loading state
+  
   const isSearchLoading = isLoading || 
     (geoBoundingBox && locationSearch.isLoading) || 
     (data?.resultIds && isDogLoading);

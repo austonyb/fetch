@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Convert ZIP code to coordinates using the fetch locations API
+
 export async function GET(request: NextRequest) {
   const zipCode = request.nextUrl.searchParams.get('address');
   
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Get the cookie from the incoming request
+    
     const cookie = request.cookies.get('fetch-access-token');
     if (!cookie) {
       return NextResponse.json(
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Use the locations API endpoint to get the location data for this ZIP code
+    
     const locationsUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/locations`;
     
     const fetchOptions = {
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     const locations = await response.json();
 
-    // Check if we got any location data
+    
     if (!locations || locations.length === 0) {
       return NextResponse.json(
         { error: 'No location found for this ZIP code' },
@@ -54,10 +54,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Format the response to match the expected structure in the Map component
+    
     const locationData = locations[0];
     
-    // Create a geocoding-style response
+    
     const geocodingResult = {
       place_id: 1,
       licence: "Fetch API",

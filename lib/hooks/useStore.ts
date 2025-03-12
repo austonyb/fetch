@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 
-// Define the store state interface
+
 interface StoreState {
     likedDogs: string[]
     addLikedDog: (dogId: string) => void

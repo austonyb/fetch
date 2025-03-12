@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L, { LatLngTuple } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
-// Fix Leaflet icon issues in Next.js
+
 const fixLeafletIcon = () => {
   // @ts-expect-error - Leaflet's icon system doesn't play well with webpack
   delete L.Icon.Default.prototype._getIconUrl
@@ -16,7 +16,7 @@ const fixLeafletIcon = () => {
   })
 }
 
-// Custom purple marker to match the app's theme
+
 const purpleIcon = new L.Icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -26,7 +26,7 @@ const purpleIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-// Map style definitions
+
 const mapStyles = {
   light: {
     url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
@@ -42,7 +42,7 @@ const mapStyles = {
   }
 };
 
-// Helper function to get coordinates from zip code
+
 async function getCoordinatesFromZipCode(zipCode: string): Promise<LatLngTuple | null> {
   try {
     const response = await fetch(`/api/locations/geocode?address=${zipCode}`)
@@ -50,9 +50,9 @@ async function getCoordinatesFromZipCode(zipCode: string): Promise<LatLngTuple |
     
     const data = await response.json()
     
-    // Check if we got valid results back
+    
     if (data && data.length > 0) {
-      // The geocoding API returns latitude and longitude as strings, so we need to parse them
+      
       const lat = parseFloat(data[0].lat);
       const lon = parseFloat(data[0].lon);
       
@@ -80,7 +80,7 @@ interface MapProps {
   mapStyle?: 'light' | 'dark' | 'pastel';
 }
 
-// This component will help initialize Leaflet when the map is ready
+
 function InitializeLeaflet() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -106,7 +106,7 @@ export default function Map({
   useEffect(() => {
     setIsMounted(true)
     
-    // Fetch coordinates from zip code
+    
     const fetchCoordinates = async () => {
       try {
         if (!zipCode) return
@@ -114,7 +114,7 @@ export default function Map({
         const coords = await getCoordinatesFromZipCode(zipCode)
         if (coords) {
           setCoordinates(coords)
-          setLocationName(zipCode) // We only have the zipcode to display
+          setLocationName(zipCode) 
         }
       } catch (error) {
         console.error('Error fetching coordinates:', error)

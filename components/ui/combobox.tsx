@@ -38,21 +38,21 @@ export function Combobox({
   const [localValues, setLocalValues] = React.useState<string[]>(defaultValue)
   const [activeIndex, setActiveIndex] = React.useState<number>(-1)
 
-  // Ensure breeds is always an array
+  
   const safeBreeds = React.useMemo(() => {
     return Array.isArray(breeds) ? breeds : []
   }, [breeds])
 
-  // Use controlled or uncontrolled values
+  
   const values = controlledValues ?? localValues
   const setValue = React.useCallback((newValues: string[]) => {
-    // In single select mode, only keep the last value
+    
     const finalValues = multiple ? newValues : newValues.slice(-1)
     setLocalValues(finalValues)
     onSelect?.(finalValues)
   }, [onSelect, multiple])
 
-  // Keyboard navigation
+  
   const handleKeyDown = React.useCallback((e: React.KeyboardEvent) => {
     if (!open) return
 

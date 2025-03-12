@@ -35,10 +35,10 @@ export default function Login() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(formData),
-                credentials: 'include' // Allow cookies to be sent and stored
+                credentials: 'include' 
             })
             
-            // Log response headers
+            
             console.log('Login response status:', response.status);
             const headers: Record<string, string> = {};
             response.headers.forEach((value, key) => {
@@ -46,7 +46,7 @@ export default function Login() {
                 console.log(`Response header ${key}:`, value);
             });
             
-            // Log cookies
+            
             console.log('Document cookies:', document.cookie);
             
             const data = await response.json()
@@ -59,7 +59,7 @@ export default function Login() {
             setSuccess(true)
             console.log('Login successful:', data.message)
 
-            // Wait briefly before redirecting
+            
             setTimeout(() => {
                 if (typeof window !== 'undefined') {
                     window.location.href = '/dashboard'

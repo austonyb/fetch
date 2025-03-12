@@ -80,7 +80,7 @@ export function DataTable({
   const { likedDogs, addLikedDog, removeLikedDog } = useStore()
 
   const handleLike = React.useCallback((dogId: string, e: React.MouseEvent) => {
-    // Stop event propagation to prevent the dialog from opening
+    
     e.stopPropagation();
     
     const isLiked = likedDogs.includes(dogId)
@@ -96,25 +96,25 @@ export function DataTable({
     }
   }, [likedDogs, addLikedDog, removeLikedDog, onLike])
 
-  // Calculate total pages
+  
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
   const canGoNext = currentPage < totalPages - 1;
   const canGoPrevious = currentPage > 0;
   
-  // Handle sorting
+  
   const handleSortChange = (field: string) => {
     if (!onSort) return;
     
-    // If clicking the same field, toggle direction
+    
     if (field === sortField) {
       onSort(field, sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
-      // Default to ascending for a new field
+      
       onSort(field, 'asc');
     }
   };
 
-  // Helper to show sort indicators
+  
   const getSortIcon = (field: string) => {
     if (field !== sortField) return null;
     

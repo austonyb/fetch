@@ -7,7 +7,7 @@ export function useSafeWindow() {
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
   
   useEffect(() => {
-    // Only execute this code on the client
+    
     if (typeof window !== 'undefined') {
       setWindowObj(window)
       setWindowSize({
