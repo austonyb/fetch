@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fetch Dog Adoption App
+
+A slick little web app that hooks you up with your dream doggo from across the USA. Powered by your Fetch API (I see what you did there), it’s all about browsing, filtering, and snagging the perfect pup.
+
+## Features
+
+- **Interactive Dog Browser**: Browse dogs with filtering by breed
+- **Location-Based Search**: Filter dogs by location using an interactive map
+- **Matching Algorithm**: Like dogs and get matched with the perfect dog for adoption
+- **Responsive Design**: Works on mobile, tablet, and desktop devices
+- **Map Visualization**: View the location of dogs and your matched dog on a map
+
+## Tech Stack
+
+This project is built with:
+
+- **Next.js 15**: React's cooler cousin with App Router magic.
+- **React 19**: UI goodness for all the shiny bits.
+- **TypeScript**: Keeps our code from going rogue.
+- **Tailwind CSS**: Styles so sharp they bite.
+- **Leaflet Maps**: Maps that don't suck.
+- **Auth**: Custom Fetch API login—because security's sexy.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+Make sure you have Node.js (v18 or newer) and npm/pnpm/yarn installed on your machine.
+
+### Installation
+
+1. Clone the repository:
 ```bash
+git clone https://github.com/yourusername/fetch.git
+cd fetch
+```
+
+2. Install dependencies:
+```bash
+pnpm install
+# or
+npm install
+# or
+yarn install
+```
+
+3. Run the development server:
+```bash
+pnpm dev
+# or
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Open [http://localhost:3000](http://localhost:3000) with your browser to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Build for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+To create an optimized production build:
 
-## Learn More
+```bash
+pnpm build
+# or
+npm run build
+# or
+yarn build
+```
 
-To learn more about Next.js, take a look at the following resources:
+Then start the production server:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm start
+# or
+npm start
+# or
+yarn start
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Implementation Notes
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- The app uses client-side components for interactive elements like maps that require access to browser APIs
+- Server-side rendering (SSR) is used for initial page loads to improve SEO and performance
+- The map functionality uses a custom component that allows users to select areas on the map to filter dogs by location
